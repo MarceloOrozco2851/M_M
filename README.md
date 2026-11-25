@@ -22,7 +22,6 @@ Abre `index.html` con doble clic. Funciona sin servidor; las fotos están en `fo
    - **Nuestros lugares:** mapa satelital interactivo (Leaflet + Esri) con un pin por lugar; al tocar un pin (o una parada) se abre el álbum de fotos de ese lugar.
    - Foto de Metro Mall.
    - **Galería:** las fotos de los días 4 y 5 de septiembre de 2026.
-   - **Siete atardeceres:** cuenta regresiva a la **graduación del 27 de noviembre** (7 tarjetas, del 21 al 27); la tarjeta del día se ilumina con “HOY”.
    - “Nuestra lista” (checklist interactiva).
    - “Nuestros vales de amor” (se pueden canjear).
    - Ruleta de citas.
@@ -72,15 +71,6 @@ Están en `fotos/` ya optimizadas (JPEG). Para cambiar una, reemplaza el archivo
 1. **Netlify Drop** — https://app.netlify.com/drop (arrastra la carpeta completa, con `fotos/`).
 2. **GitHub Pages** — Settings → Pages → rama `main` / root.
 3. **Vercel** — `npx vercel` dentro de la carpeta.
-
-## Atardeceres
-
-La sección **“Siete atardeceres”** cuenta los días hasta la **graduación**: 7 tarjetas del 07 al 01 (del 21 al 27 de noviembre), cada una con su cielo y su frase, y una cuenta regresiva en vivo.
-
-- La fecha objetivo está en `FECHA_GRADUACION = '2026-11-27T18:15:00'` (cámbiala si la ceremonia es a otra hora).
-- La tarjeta del día se resalta automáticamente con la etiqueta **HOY**; la última lleva **27 NOV**.
-- Las frases y los colores de cada cielo están en el arreglo `ATARDECERES`.
-- Cuando llega la fecha, el número grande cambia a **HOY** y el reloj muestra que la graduación ya llegó.
 
 ## Mapa de lugares
 
