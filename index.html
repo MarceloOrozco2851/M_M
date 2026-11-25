@@ -1,0 +1,2735 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#070d24" />
+<title>E &amp; M</title>
+
+<!-- Tulipán como icono -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23070d24'/%3E%3Cpath d='M32 41c-6.6 0-12-5.4-12-12V15.5c0-2.2 2.6-3.2 4.1-1.5L32 22l7.9-8c1.5-1.7 4.1-.7 4.1 1.5V29c0 6.6-5.4 12-12 12Z' fill='%23e8c15f'/%3E%3Cpath d='M32 22v17' stroke='%23c99b34' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M32 40v15' stroke='%2378c48f' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M32 55c-7-1.6-10.5-6.4-10.5-12 6.2 0 10.5 4.6 10.5 12Z' fill='%2378c48f'/%3E%3C/svg%3E" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+  /* ============ BASE ============ */
+  :root{
+    --bg:#060b1e;
+    --bg-2:#0a1330;
+    --panel-a:#111c44;
+    --panel-b:#0a1230;
+    --oro:#e8c15f;
+    --oro-claro:#f4dda2;
+    --oro-oscuro:#b98d2b;
+    --linea:rgba(232,193,95,.34);
+    --linea-suave:rgba(232,193,95,.16);
+    --crema:#f7f1e3;
+    --texto:#c3c8de;
+    --tenue:#9aa1bf;
+    --serif:'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --sans:'Jost', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    min-height:100%;
+    font-family:var(--sans);
+    color:var(--texto);
+    background:
+      radial-gradient(1100px 700px at 50% -8%, #1a2a63 0%, transparent 62%),
+      radial-gradient(900px 700px at 90% 100%, #241b49 0%, transparent 60%),
+      linear-gradient(175deg, #070c20 0%, var(--bg-2) 45%, #070d24 100%);
+    background-attachment:fixed;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  body:not(.abierto){ overflow:hidden; }
+
+  ::selection{ background:rgba(232,193,95,.32); color:#fff; }
+
+  button{ font-family:inherit; }
+
+  /* ============ FONDO ============ */
+  .fondo{
+    position:fixed; inset:0; z-index:0;
+    overflow:hidden; pointer-events:none;
+  }
+  .fondo::after{
+    content:'';
+    position:absolute; inset:0;
+    background:radial-gradient(circle at 50% 40%, transparent 45%, rgba(3,6,16,.5) 100%);
+  }
+  .flotante{
+    position:absolute; bottom:-12%;
+    opacity:0;
+    will-change:transform, opacity;
+    animation-name:flotar;
+    animation-timing-function:linear;
+    animation-iteration-count:infinite;
+  }
+  .flotante svg{ display:block; width:100%; height:auto; }
+  @keyframes flotar{
+    0%   { transform:translate3d(0,0,0) rotate(0deg) scale(.9); opacity:0; }
+    12%  { opacity:.5; }
+    55%  { opacity:.33; }
+    88%  { opacity:.16; }
+    100% { transform:translate3d(var(--deriva, 30px),-118vh,0) rotate(var(--giro, 35deg)) scale(1.05); opacity:0; }
+  }
+
+  /* ---------- Pétalos cayendo ---------- */
+  .petalos{
+    position:fixed; inset:0; z-index:0;
+    overflow:hidden; pointer-events:none;
+  }
+  .petalo-cae{
+    position:absolute;
+    top:-8vh;
+    color:var(--pc, #e8c15f);
+    opacity:0;
+    will-change:transform, opacity;
+    animation-name:caer;
+    animation-timing-function:linear;
+    animation-iteration-count:infinite;
+  }
+  .petalo-cae svg{ display:block; width:100%; height:100%; }
+  @keyframes caer{
+    0%   { transform:translate3d(0,-8vh,0) rotate(0deg); opacity:0; }
+    8%   { opacity:.65; }
+    50%  { transform:translate3d(var(--deriva2, 30px),50vh,0) rotate(190deg); }
+    90%  { opacity:.4; }
+    100% { transform:translate3d(calc(var(--deriva2, 30px) * -1),112vh,0) rotate(380deg); opacity:0; }
+  }
+
+  /* ---------- Jardín de tulipanes ---------- */
+  .jardin{
+    position:absolute;
+    left:0; right:0; bottom:-4px;
+    height:clamp(140px, 24vh, 220px);
+    z-index:0;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .jardin__tulipan{
+    position:absolute;
+    bottom:-2px;
+    height:var(--alto, 110px);
+    width:calc(var(--alto, 110px) * .485);
+    transform-origin:bottom center;
+    animation:sway 6s ease-in-out infinite;
+    opacity:.75;
+    pointer-events:auto;
+    cursor:pointer;
+    filter:drop-shadow(0 6px 10px rgba(2,5,16,.45));
+    transition:filter .3s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .jardin__tulipan:hover{ filter:drop-shadow(0 9px 16px rgba(2,5,16,.55)) brightness(1.07); }
+  .jardin__tulipan:focus-visible{ outline:1px solid rgba(244,221,162,.7); outline-offset:3px; border-radius:20px; }
+  .jardin__tulipan svg{ display:block; width:100%; height:100%; }
+  .jardin--final{
+    position:relative;
+    left:auto; right:auto; bottom:auto;
+    height:175px;
+    margin:0 0 -6px;
+    overflow:hidden;
+  }
+  @keyframes sway{
+    0%,100% { transform:rotate(-2.2deg); }
+    50%     { transform:rotate(2.6deg); }
+  }
+
+  /* ---------- Fotos flotantes ---------- */
+  .fotos-flotantes{
+    position:fixed; inset:0; z-index:1;
+    overflow:hidden;
+    pointer-events:none;
+  }
+  .foto-flotante{
+    position:absolute;
+    margin:0;
+    padding:4px 4px 12px;
+    background:#fdfaf3;
+    border-radius:4px;
+    box-shadow:0 12px 26px rgba(0,0,0,.5);
+    transform:rotate(var(--r, -6deg));
+    animation:vaiven var(--d, 9s) ease-in-out var(--delay, 0s) infinite;
+    opacity:.72;
+  }
+  .foto-flotante img{
+    display:block;
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:2px;
+    filter:saturate(.85);
+  }
+  @keyframes vaiven{
+    0%,100% { transform:translateY(0) rotate(var(--r, -6deg)); }
+    50%     { transform:translateY(-12px) rotate(calc(var(--r, -6deg) + 3deg)); }
+  }
+
+  /* ---------- Explosión de pétalos ---------- */
+  .burst{
+    position:fixed; inset:0; z-index:45;
+    pointer-events:none;
+    overflow:hidden;
+  }
+  .burst__petalo{
+    position:absolute;
+    width:16px; height:21px;
+    will-change:transform, opacity;
+  }
+  .burst__petalo svg{
+    display:block; width:100%; height:100%;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));
+  }
+
+  /* ============ INTRO ============ */
+  .intro{
+    position:fixed; inset:0; z-index:5;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:clamp(14px, 2.2vh, 26px);
+    padding:clamp(22px, 5vw, 48px) 22px;
+    transition:opacity .55s ease, transform .6s ease, visibility .55s;
+  }
+  body.abierto .intro{ opacity:0; visibility:hidden; transform:scale(1.06); pointer-events:none; }
+  .intro__texto{ display:flex; flex-direction:column; align-items:center; gap:clamp(6px,1.2vh,14px); position:relative; z-index:1; }
+
+  .subtitulo{
+    margin:0;
+    font-size:clamp(.66rem, 2.5vw, .8rem);
+    font-weight:300;
+    letter-spacing:.52em; text-indent:.52em;
+    color:#d6dbf0; text-transform:uppercase;
+    animation:entrar 1s .15s cubic-bezier(.22,.9,.28,1) both;
+  }
+  .titulo{
+    margin:0;
+    font-family:var(--serif); font-style:italic; font-weight:500;
+    font-size:clamp(3.6rem, 16vw, 6rem);
+    line-height:.95;
+    background:linear-gradient(180deg,#fff6da 0%,var(--oro-claro) 26%,var(--oro) 55%,#b98e2e 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 6px 22px rgba(232,193,95,.28));
+    animation:entrar 1.1s .32s cubic-bezier(.22,.9,.28,1) both;
+  }
+  .divisor{
+    display:flex; align-items:center; gap:10px;
+    animation:entrar 1s .5s ease both;
+  }
+  .divisor span{ display:block; width:clamp(34px,9vw,62px); height:1px; background:linear-gradient(90deg, transparent, rgba(232,193,95,.7)); }
+  .divisor span:last-child{ background:linear-gradient(270deg, transparent, rgba(232,193,95,.7)); }
+  .divisor svg{ width:13px; height:13px; color:var(--oro); opacity:.9; }
+
+  @keyframes entrar{ from{ opacity:0; transform:translateY(22px); } to{ opacity:1; transform:translateY(0); } }
+
+  .sobre-envoltura{
+    position:relative;
+    width:min(430px, 88vw);
+    animation:entrar 1.15s .58s cubic-bezier(.22,.9,.28,1) both;
+  }
+  .sobre-envoltura::before{
+    content:'';
+    position:absolute; inset:-18% -12%;
+    background:radial-gradient(ellipse at center, rgba(232,193,95,.2) 0%, transparent 68%);
+    filter:blur(14px);
+    pointer-events:none;
+  }
+  .sobre{
+    position:relative;
+    width:100%; aspect-ratio:1.42/1;
+    perspective:1300px;
+    filter:drop-shadow(0 34px 44px rgba(2,4,14,.55));
+    transition:transform .8s cubic-bezier(.22,.9,.28,1);
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .sobre:hover{ transform:translateY(-6px); }
+  .sobre:focus-visible{ outline:2px solid var(--oro-claro); outline-offset:10px; border-radius:12px; }
+
+  .sobre__cuerpo{
+    position:absolute; inset:0; border-radius:12px;
+    background:linear-gradient(160deg,#e0b355 0%,#caa03c 48%,#b58a2b 100%);
+    box-shadow:inset 0 0 0 1px rgba(255,240,200,.22), inset 0 -22px 40px rgba(80,55,10,.28);
+    z-index:1;
+  }
+  .sobre__papel{
+    position:absolute; left:6%; right:6%; bottom:7%; height:88%;
+    z-index:2; border-radius:8px 8px 3px 3px;
+    background:linear-gradient(180deg,#fffaf0,#f7ecd8);
+    box-shadow:0 8px 22px rgba(20,14,0,.35), inset 0 0 0 1px rgba(190,150,70,.35);
+    display:flex; flex-direction:column; align-items:center; gap:12px;
+    padding-top:clamp(16px,5vw,26px);
+    transition:transform .95s cubic-bezier(.3,.9,.25,1);
+    overflow:hidden;
+  }
+  .sobre__papel span{
+    font-family:var(--serif); font-style:italic;
+    font-size:clamp(1.15rem,4.2vw,1.5rem); color:#b08a3c;
+  }
+  .sobre__papel i{ display:block; width:52%; height:1px; background:linear-gradient(90deg,transparent,rgba(180,148,80,.55),transparent); }
+  .sobre__papel em{
+    font-family:var(--sans); font-style:normal;
+    font-size:.56rem; letter-spacing:.32em; text-transform:uppercase; color:#b6a077;
+  }
+
+  .sobre__solapa{ position:absolute; inset:0; border-radius:12px; z-index:3; pointer-events:none; }
+  .solapa-izq{ clip-path:polygon(0 0, 52% 51%, 0 100%); background:linear-gradient(90deg,#b98d2b,#d3a743); }
+  .solapa-der{ clip-path:polygon(100% 0, 48% 51%, 100% 100%); background:linear-gradient(270deg,#b98d2b,#d3a743); }
+  .solapa-inf{ clip-path:polygon(0 100%, 50% 47%, 100% 100%); background:linear-gradient(180deg,#d8ac47,#c19632); }
+  .solapa-sup{
+    clip-path:polygon(0 0, 100% 0, 50% 54%);
+    background:linear-gradient(180deg,#efcb74,#d5a944 85%);
+    transform-origin:top center;
+    transition:transform .95s cubic-bezier(.45,.05,.25,1), filter .5s;
+    backface-visibility:hidden;
+  }
+  .sobre:hover .solapa-sup{ filter:brightness(1.06); }
+
+  .sello{
+    position:absolute; left:50%; top:52%;
+    width:clamp(58px,17vw,82px); aspect-ratio:1;
+    transform:translate(-50%,-50%);
+    border-radius:50%; z-index:6;
+    display:grid; place-items:center;
+    background:radial-gradient(circle at 34% 30%, #fff3c9 0%, #f0cf77 38%, #d4a83f 72%, #b58a29 100%);
+    box-shadow:0 10px 20px rgba(60,40,0,.42), inset 0 -3px 8px rgba(120,85,10,.35), inset 0 2px 4px rgba(255,250,225,.75);
+    transition:transform .55s cubic-bezier(.5,-.4,.6,1.4), opacity .5s ease;
+    pointer-events:none;
+  }
+  .sello svg{ width:42%; height:42%; color:#fffdf5; filter:drop-shadow(0 1px 2px rgba(140,100,10,.45)); }
+
+  body.abriendo .solapa-sup{ transform:rotateX(-178deg); z-index:0; }
+  body.abriendo .sello{ opacity:0; transform:translate(-50%,-50%) scale(.35) rotate(28deg); }
+  body.abriendo .sobre__papel{ transform:translateY(-24%); }
+  body.abriendo .sobre{ cursor:default; }
+
+  /* Botón principal */
+  .boton{
+    position:relative;
+    z-index:1;
+    display:inline-flex; align-items:center; justify-content:center; gap:.55rem;
+    min-height:58px;
+    padding:0 clamp(28px,8vw,46px);
+    border:none; border-radius:999px;
+    font-size:clamp(.95rem,3.6vw,1.06rem);
+    font-weight:400; letter-spacing:.035em;
+    color:#2b2208; cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    background:linear-gradient(180deg,#ffe9a8 0%,#f2cb6b 42%,#e2b451 100%);
+    box-shadow:
+      0 14px 26px -8px rgba(3,6,18,.7),
+      0 1px 0 rgba(255,255,255,.45) inset,
+      0 0 0 1px rgba(255,247,214,.45) inset,
+      0 -3px 10px rgba(120,85,10,.26) inset;
+    overflow:hidden;
+    transition:transform .25s ease, filter .3s ease;
+    animation:entrar 1.15s .78s cubic-bezier(.22,.9,.28,1) both, latir 3.6s 2s ease-in-out infinite;
+  }
+  .boton::after{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(100deg, transparent 30%, rgba(255,255,255,.55) 48%, transparent 62%);
+    transform:translateX(-120%);
+    animation:brillo 5.5s 3s ease-in-out infinite;
+    pointer-events:none;
+  }
+  .boton:hover{ transform:translateY(-2px); filter:brightness(1.04); }
+  .boton:active{ transform:translateY(1px) scale(.985); }
+  .boton:focus-visible{ outline:2px solid #fff3cf; outline-offset:4px; }
+  @keyframes latir{
+    0%,100%{ box-shadow:0 14px 26px -8px rgba(3,6,18,.7), 0 1px 0 rgba(255,255,255,.45) inset, 0 0 0 1px rgba(255,247,214,.45) inset, 0 -3px 10px rgba(120,85,10,.26) inset, 0 0 0 0 rgba(232,193,95,0); }
+    50%    { box-shadow:0 14px 26px -8px rgba(3,6,18,.7), 0 1px 0 rgba(255,255,255,.45) inset, 0 0 0 1px rgba(255,247,214,.45) inset, 0 -3px 10px rgba(120,85,10,.26) inset, 0 0 26px 6px rgba(232,193,95,.26); }
+  }
+  @keyframes brillo{
+    0%, 62%{ transform:translateX(-120%); }
+    82%,100%{ transform:translateX(120%); }
+  }
+
+  /* ============ SITIO ============ */
+  .sitio{
+    position:relative; z-index:2;
+    display:none;
+    width:100%; max-width:640px;
+    margin:0 auto;
+    padding:clamp(34px,7vh,64px) 18px calc(56px + env(safe-area-inset-bottom));
+    flex-direction:column;
+    gap:clamp(18px,3.6vw,26px);
+  }
+  body.abierto .sitio{ display:flex; }
+
+  .revelar{
+    opacity:0;
+    transform:translateY(26px);
+    transition:opacity .9s cubic-bezier(.22,.9,.28,1), transform .9s cubic-bezier(.22,.9,.28,1);
+  }
+  .revelar.visible{ opacity:1; transform:none; }
+
+  /* Hero */
+  .hero{
+    text-align:center;
+    padding:clamp(6px,2vh,18px) 4px clamp(2px,1vh,8px);
+  }
+  .hero__etiqueta{
+    margin:0 0 14px;
+    font-size:.6rem; letter-spacing:.42em; text-indent:.42em;
+    text-transform:uppercase; color:var(--tenue);
+  }
+  .hero__nombres{
+    margin:0;
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:clamp(2.6rem, 11.5vw, 4rem);
+    line-height:1.05;
+    letter-spacing:.005em;
+    color:var(--crema);
+    text-shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+  .hero__nombres .amp{
+    font-style:italic;
+    color:var(--oro);
+    padding:0 .06em;
+  }
+  .hero__linea{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    margin:16px auto 0;
+  }
+  .hero__linea i{
+    display:block;
+    width:34px; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(232,193,95,.7));
+  }
+  .hero__linea i:last-of-type{ background:linear-gradient(270deg,transparent,rgba(232,193,95,.7)); }
+  .hero__linea svg{ width:15px; height:15px; color:var(--oro); }
+  .hero__lugar{
+    margin:16px 0 0;
+    font-size:.56rem;
+    letter-spacing:.3em;
+    text-indent:.3em;
+    text-transform:uppercase;
+    color:#8f96b4;
+  }
+  .hero__lugar span{ color:#c9a86a; padding:0 .5em; }
+
+  /* Marco de foto */
+  .marco{
+    position:relative;
+    width:100%;
+    max-width:470px;
+    margin:0 auto;
+    background:#fdfaf3;
+    padding:9px;
+    border-radius:16px;
+    box-shadow:0 26px 50px rgba(1,4,14,.55), 0 2px 0 rgba(255,255,255,.6) inset;
+  }
+  .marco__foto{
+    position:relative;
+    aspect-ratio:4/5;
+    border-radius:9px;
+    overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 20% 10%, rgba(232,193,95,.28), transparent 55%),
+      radial-gradient(100% 90% at 85% 95%, rgba(126,96,180,.4), transparent 60%),
+      linear-gradient(150deg,#1a2450 0%,#0d1533 60%,#141b3d 100%);
+    display:grid;
+    place-items:center;
+    gap:0;
+    isolation:isolate;
+  }
+  .marco__foto img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .marco__foto::after{
+    content:'';
+    position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,.022) 0 1px, transparent 1px 8px),
+      radial-gradient(circle at 50% 50%, transparent 55%, rgba(4,7,18,.35) 100%);
+    pointer-events:none;
+  }
+  .marco figcaption{
+    text-align:center;
+    padding:12px 6px 4px;
+    font-family:var(--serif); font-style:italic;
+    font-size:1.02rem;
+    color:#7d7258;
+  }
+
+  /* Panel base */
+  .panel{
+    position:relative;
+    width:100%;
+    padding:clamp(24px,6.2vw,38px) clamp(20px,5.6vw,34px);
+    border-radius:22px;
+    border:1px solid var(--linea);
+    background:
+      radial-gradient(130% 90% at 50% -10%, rgba(232,193,95,.09), transparent 58%),
+      linear-gradient(180deg, rgba(19,29,66,.82), rgba(8,14,36,.94));
+    box-shadow:0 24px 50px rgba(1,4,14,.4), 0 1px 0 rgba(255,255,255,.05) inset;
+    text-align:center;
+    overflow:hidden;
+  }
+  .etiqueta{
+    margin:0 0 12px;
+    font-size:.6rem; letter-spacing:.36em; text-indent:.36em;
+    text-transform:uppercase;
+    color:#c9a86a;
+    font-weight:400;
+  }
+  .titulo-panel{
+    margin:0 0 6px;
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:clamp(1.5rem,5.6vw,1.85rem);
+    line-height:1.25;
+    color:var(--crema);
+    letter-spacing:.005em;
+  }
+  .sub-panel{
+    margin:0 auto;
+    max-width:36ch;
+    font-size:.86rem;
+    font-weight:300;
+    line-height:1.65;
+    color:var(--tenue);
+  }
+
+  /* Contador */
+  .contador__grande{
+    margin:6px 0 14px;
+    font-family:var(--serif);
+    font-style:italic;
+    font-weight:500;
+    font-size:clamp(1.65rem,7vw,2.3rem);
+    line-height:1.3;
+    color:var(--oro-claro);
+    text-shadow:0 6px 24px rgba(232,193,95,.18);
+  }
+  .contador__reloj{
+    display:inline-block;
+    margin:0;
+    padding:.42rem .95rem;
+    border-radius:999px;
+    border:1px solid rgba(232,193,95,.3);
+    background:rgba(232,193,95,.07);
+    font-size:.78rem;
+    letter-spacing:.24em;
+    font-variant-numeric:tabular-nums;
+    color:#e9d3a1;
+  }
+  .contador__reloj span{ color:#8f97b8; letter-spacing:.1em; }
+  .contador__fecha{
+    margin:0 0 12px;
+    font-size:.64rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#8f96b4;
+  }
+  .contador__total{
+    margin:12px 0 0;
+    font-size:.58rem;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:#a98f5e;
+  }
+  .contador-sep{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:12px;
+    margin:24px 0;
+    color:#c9a86a;
+  }
+  .contador-sep span{
+    display:block;
+    width:min(90px, 22vw);
+    height:1px;
+    background:linear-gradient(90deg, transparent, rgba(232,193,95,.4));
+  }
+  .contador-sep span:last-child{ background:linear-gradient(270deg, transparent, rgba(232,193,95,.4)); }
+  .contador-sep svg{ width:13px; height:13px; opacity:.9; }
+  .contador__nota{
+    margin:-4px 0 12px;
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:.98rem;
+    letter-spacing:.04em;
+    color:#9aa1bf;
+  }
+
+  /* Sobre de la carta */
+  .sobre-arte{
+    position:relative;
+    width:100%;
+    max-width:300px;
+    margin:6px auto 22px;
+    aspect-ratio:3/2;
+  }
+  .sobre-arte svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .sobre-arte .corchete{
+    position:absolute;
+    width:16px; height:16px;
+    border:1px solid rgba(232,193,95,.6);
+  }
+  .sobre-arte .corchete:nth-of-type(1){ top:-16px; left:-16px; border-right:0; border-bottom:0; }
+  .sobre-arte .corchete:nth-of-type(2){ top:-16px; right:-16px; border-left:0; border-bottom:0; }
+  .sobre-arte .corchete:nth-of-type(3){ bottom:-16px; left:-16px; border-right:0; border-top:0; }
+  .sobre-arte .corchete:nth-of-type(4){ bottom:-16px; right:-16px; border-left:0; border-top:0; }
+
+  .sello-carta{
+    position:absolute; left:50%; top:50%;
+    width:clamp(62px,17vw,84px); aspect-ratio:1;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    display:grid; place-items:center;
+    background:radial-gradient(circle at 34% 28%, #fff3c9, #f0cf77 40%, #d4a83f 72%, #b58a29 100%);
+    box-shadow:0 0 0 8px rgba(232,193,95,.07), 0 14px 30px rgba(0,0,0,.45), inset 0 -3px 8px rgba(120,85,10,.3);
+  }
+  .sello-carta svg{ width:44%; height:44%; color:#1b1405; }
+  .sello-carta::after{
+    content:'';
+    position:absolute; inset:-14px;
+    border-radius:50%;
+    border:1px solid rgba(232,193,95,.18);
+    animation:pulso 3.4s ease-in-out infinite;
+  }
+  @keyframes pulso{
+    0%,100%{ transform:scale(1); opacity:.7; }
+    50%    { transform:scale(1.1); opacity:0; }
+  }
+
+  .btn-contorno{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-height:50px;
+    padding:0 clamp(24px,7vw,38px);
+    border-radius:999px;
+    border:1px solid rgba(232,193,95,.55);
+    background:transparent;
+    color:var(--oro-claro);
+    font-size:.76rem;
+    letter-spacing:.26em;
+    text-transform:uppercase;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .3s, color .3s, border-color .3s, transform .25s;
+  }
+  .btn-contorno:hover{ background:var(--oro); color:#231b05; border-color:var(--oro); transform:translateY(-1px); }
+  .btn-contorno:active{ transform:translateY(0); }
+  .btn-contorno:focus-visible{ outline:2px solid var(--oro-claro); outline-offset:4px; }
+
+  /* Lo que amo de ti */
+  .gustos{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:2px;
+    margin:18px 0 0;
+    text-align:left;
+  }
+  @media (min-width:480px){ .gustos{ grid-template-columns:1fr 1fr; gap:4px 18px; } }
+  .gustos li{
+    display:flex; gap:11px; align-items:flex-start;
+    padding:11px 0;
+    font-size:.92rem; line-height:1.6; font-weight:300;
+    color:#d5d8e8;
+    border-bottom:1px solid rgba(232,193,95,.08);
+  }
+  .gustos svg{ flex:none; width:14px; height:14px; margin-top:.35em; color:#d99a6a; }
+
+  /* Momentos */
+  .momentos{
+    position:relative;
+    margin:22px 0 0;
+    padding-left:28px;
+    text-align:left;
+  }
+  .momentos::before{
+    content:'';
+    position:absolute; left:4px; top:8px; bottom:14px;
+    width:1px;
+    background:linear-gradient(180deg, rgba(232,193,95,.7), rgba(232,193,95,.18) 70%, transparent);
+  }
+  .momento{ position:relative; padding-bottom:22px; }
+  .momento:last-child{ padding-bottom:0; }
+  .momento::before{
+    content:'';
+    position:absolute; left:-28px; top:7px;
+    width:9px; height:9px; border-radius:50%;
+    background:var(--oro);
+    box-shadow:0 0 0 4px rgba(232,193,95,.14);
+  }
+  .momento__cap{
+    display:block;
+    font-size:.56rem; letter-spacing:.22em; text-transform:uppercase;
+    color:#a98f5e; margin-bottom:.3rem;
+  }
+  .momento h3{
+    margin:0 0 .3rem;
+    font-family:var(--serif); font-weight:600;
+    font-size:1.24rem; line-height:1.25;
+    color:var(--oro-claro);
+  }
+  .momento p{ margin:0; font-size:.9rem; line-height:1.72; font-weight:300; color:#b9bed4; }
+
+  /* Mapa */
+  .mapa{
+    position:relative;
+    margin:20px 0 18px;
+    aspect-ratio:16/10;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid rgba(232,193,95,.22);
+    background:
+      radial-gradient(80% 90% at 20% 20%, rgba(41,60,124,.8), transparent 60%),
+      radial-gradient(70% 80% at 80% 80%, rgba(58,40,96,.8), transparent 60%),
+      linear-gradient(150deg,#0d1638,#0a1029);
+  }
+  .mapa::before{
+    content:'';
+    position:absolute; inset:0;
+    background:
+      linear-gradient(rgba(232,193,95,.07) 1px, transparent 1px) 0 0/ 100% 22px,
+      linear-gradient(90deg, rgba(232,193,95,.07) 1px, transparent 1px) 0 0/ 22px 100%;
+    mask-image:radial-gradient(circle at 50% 50%, #000 55%, transparent 100%);
+  }
+  .mapa svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .ciudad{
+    position:absolute;
+    transform:translate(-50%,0);
+    display:flex; flex-direction:column; align-items:center; gap:9px;
+    z-index:2;
+  }
+  .ciudad__punto{
+    position:relative;
+    width:12px; height:12px;
+    border-radius:50%;
+    background:var(--oro);
+    box-shadow:0 0 0 5px rgba(232,193,95,.12), 0 0 18px rgba(232,193,95,.6);
+  }
+  .ciudad__punto::after{
+    content:'';
+    position:absolute; inset:-7px;
+    border-radius:50%;
+    border:1px solid rgba(232,193,95,.35);
+    animation:pulso 3.8s ease-in-out infinite;
+  }
+  .ciudad__nombre{
+    padding:4px 9px;
+    border-radius:999px;
+    background:rgba(7,12,30,.85);
+    border:1px solid rgba(232,193,95,.28);
+    font-size:.5rem; letter-spacing:.16em; text-transform:uppercase;
+    color:#e7d6ae;
+    white-space:nowrap;
+  }
+  .etiqueta--sub{ margin-top:26px; }
+
+  /* Mapa interactivo + paradas */
+  .mapa-paradas{
+    position:relative;
+    z-index:0;
+    isolation:isolate;
+    height:300px;
+    margin:18px 0 12px;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid rgba(232,193,95,.28);
+    background:#0a1029;
+    box-shadow:0 12px 28px rgba(0,0,0,.4);
+  }
+  @media (min-width:520px){ .mapa-paradas{ height:340px; } }
+  .mapa-paradas .leaflet-container{ background:#0a1029; font-family:var(--sans); }
+  .mapa-paradas .leaflet-tile-pane{ filter:saturate(.85) brightness(.8) contrast(1.05); }
+  .mapa-paradas .leaflet-control-zoom{ border:1px solid rgba(232,193,95,.3); border-radius:8px; overflow:hidden; }
+  .mapa-paradas .leaflet-control-zoom a{
+    background:#0c1533; color:#e8c15f; border-color:rgba(232,193,95,.22);
+  }
+  .mapa-paradas .leaflet-control-zoom a:hover{ background:#16224a; color:#f4dda2; }
+  .mapa-paradas .leaflet-control-attribution{
+    background:rgba(7,12,30,.72); color:#9aa1bf; font-size:9px;
+  }
+  .mapa-paradas .leaflet-control-attribution a{ color:#c9a86a; }
+
+  .pin-mapa{ background:transparent; border:0; }
+  .pin-mapa__cuerpo{
+    display:grid; place-items:center;
+    width:38px; height:38px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff3cc, #e8c15f 55%, #b98d2b);
+    border:2px solid rgba(8,12,28,.88);
+    box-shadow:0 8px 18px rgba(0,0,0,.55), 0 0 0 5px rgba(232,193,95,.16);
+    color:#241b05;
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:.95rem;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .leaflet-marker-icon:hover .pin-mapa__cuerpo{
+    transform:scale(1.08);
+    box-shadow:0 10px 22px rgba(0,0,0,.6), 0 0 0 8px rgba(232,193,95,.22);
+  }
+  .etiqueta-mapa{
+    background:rgba(7,12,30,.86);
+    border:1px solid rgba(232,193,95,.32);
+    border-radius:999px;
+    box-shadow:0 6px 14px rgba(0,0,0,.45);
+    color:#f2e7cc;
+    font-family:var(--sans);
+    font-weight:400;
+    font-size:10px;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+    padding:4px 9px;
+    white-space:nowrap;
+  }
+  .etiqueta-mapa::before{ display:none; }
+  .mapa-paradas--fallo{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:8px; padding:20px; text-align:center;
+    font-size:.82rem; color:#9aa1bf;
+  }
+  .mapa-paradas--fallo a{ color:#e8c15f; }
+  .mapa-google__link{
+    display:inline-block;
+    margin:-2px 0 16px;
+    padding-bottom:3px;
+    border-bottom:1px solid rgba(232,193,95,.35);
+    font-size:.55rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:#c9a86a;
+    text-decoration:none;
+    transition:color .25s, border-color .25s;
+  }
+  .mapa-google__link:hover{ color:var(--oro-claro); border-color:var(--oro-claro); }
+
+  .paradas{ display:grid; gap:8px; text-align:left; }
+  .parada{
+    display:flex; align-items:center; gap:13px;
+    width:100%;
+    padding:13px 15px;
+    border-radius:12px;
+    border:1px solid rgba(232,193,95,.22);
+    background:rgba(232,193,95,.04);
+    color:inherit;
+    font-family:inherit;
+    text-align:left;
+    cursor:pointer;
+    transition:background .25s, border-color .25s, transform .25s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .parada:hover{ background:rgba(232,193,95,.1); border-color:rgba(232,193,95,.45); transform:translateX(2px); }
+  .parada:focus-visible{ outline:2px solid var(--oro-claro); outline-offset:3px; }
+  .parada.activa{ background:rgba(232,193,95,.13); border-color:rgba(232,193,95,.6); }
+  .parada__num{
+    flex:none;
+    font-family:var(--serif); font-style:italic;
+    font-size:1rem; color:#a98f5e; min-width:24px;
+  }
+  .parada__txt{ flex:1; min-width:0; }
+  .parada__txt b{ display:block; font-weight:400; color:var(--crema); font-size:.98rem; }
+  .parada__txt small{ display:block; margin-top:3px; font-size:.66rem; letter-spacing:.04em; color:#9aa1bf; }
+  .parada__fotos{
+    flex:none;
+    padding:4px 8px;
+    border-radius:999px;
+    border:1px solid rgba(232,193,95,.3);
+    font-size:.5rem; letter-spacing:.14em; text-transform:uppercase;
+    color:#c9a86a;
+    white-space:nowrap;
+  }
+
+  /* Galería */
+  .galeria{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin:18px 0 0;
+  }
+  .galeria figure{
+    position:relative;
+    margin:0;
+    aspect-ratio:3/4;
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid rgba(232,193,95,.18);
+    background:#0d1533;
+  }
+  .galeria img{
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
+    transition:transform .8s cubic-bezier(.22,.9,.28,1);
+  }
+  .galeria figure:hover img{ transform:scale(1.04); }
+  .galeria figcaption{
+    position:absolute; left:0; right:0; bottom:0;
+    padding:26px 10px 8px;
+    text-align:left;
+    font-size:.48rem; letter-spacing:.18em; text-transform:uppercase;
+    color:#f2e7cc;
+    background:linear-gradient(transparent, rgba(4,7,18,.8));
+  }
+
+  /* Atardeceres */
+  .cuenta{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    margin:20px 0 4px;
+    padding:18px 10px 22px;
+    border-radius:16px;
+    border:1px solid rgba(232,193,95,.16);
+    background:
+      radial-gradient(80% 120% at 50% 120%, rgba(232,150,80,.18), transparent 60%),
+      rgba(232,193,95,.03);
+  }
+  .cuenta__num{
+    font-family:var(--serif);
+    font-style:italic;
+    font-weight:500;
+    font-size:clamp(4rem, 18vw, 5.4rem);
+    line-height:.9;
+    color:var(--oro-claro);
+    text-shadow:0 0 34px rgba(240,170,90,.35);
+    transition:font-size .3s ease;
+  }
+  .cuenta__num--hoy{
+    font-size:clamp(2.4rem, 11vw, 3.2rem);
+    letter-spacing:.06em;
+  }
+  .cuenta__label{
+    margin:8px 0 12px;
+    font-size:.58rem;
+    letter-spacing:.26em;
+    text-transform:uppercase;
+    color:#c9a86a;
+  }
+  .cuenta__reloj{
+    margin:0;
+    padding:.42rem .95rem;
+    border-radius:999px;
+    border:1px solid rgba(232,193,95,.28);
+    background:rgba(232,193,95,.06);
+    font-size:.66rem;
+    letter-spacing:.08em;
+    color:#9aa1bf;
+  }
+  .cuenta__reloj b{
+    color:#e9d3a1;
+    font-weight:400;
+    letter-spacing:.12em;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .soles{
+    list-style:none;
+    margin:18px 0 0;
+    padding:0;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .atardecer{
+    margin:0;
+    border-radius:13px;
+    overflow:hidden;
+    border:1px solid rgba(232,193,95,.2);
+    background:linear-gradient(180deg, rgba(232,193,95,.05), rgba(7,12,30,.35));
+    text-align:left;
+  }
+  .atardecer--final{ grid-column:1 / -1; }
+  .atardecer--final .atardecer__cielo{ aspect-ratio:16/9; }
+  .atardecer--final .atardecer__frase{
+    font-size:clamp(.9rem, 3.6vw, 1rem);
+    text-align:center;
+    padding:14px 16px 16px;
+  }
+
+  .atardecer__cielo{
+    position:relative;
+    aspect-ratio:4/3;
+    overflow:hidden;
+    background:linear-gradient(180deg, var(--c1,#241a44) 0%, var(--c2,#7c4a76) 58%, var(--c3,#f0a06a) 100%);
+  }
+  .atardecer__sol{
+    position:absolute;
+    left:var(--sx, 50%);
+    bottom:var(--sy, 26%);
+    width:var(--ss, 26%);
+    aspect-ratio:1;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(circle at 42% 38%, #fffdf0 0%, var(--sol,#ffd9a0) 48%, rgba(255,190,110,.35) 68%, transparent 71%);
+    box-shadow:0 0 24px 10px rgba(255,180,100,.22);
+    animation:solPulso 7s ease-in-out infinite;
+  }
+  @keyframes solPulso{
+    0%,100%{ box-shadow:0 0 20px 8px rgba(255,180,100,.18); }
+    50%    { box-shadow:0 0 32px 16px rgba(255,190,120,.3); }
+  }
+  .atardecer__horizonte{
+    position:absolute;
+    left:-4%; right:-4%; bottom:-1px;
+    height:34%;
+    background:var(--tierra, #0a0f22);
+    clip-path:polygon(0 62%, 12% 48%, 24% 58%, 38% 34%, 52% 56%, 66% 42%, 80% 60%, 100% 46%, 100% 100%, 0 100%);
+  }
+  .atardecer__horizonte::after{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 40%);
+  }
+  .atardecer__num{
+    position:absolute;
+    top:8px; left:10px;
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:1rem;
+    color:rgba(255,248,230,.85);
+    text-shadow:0 2px 8px rgba(0,0,0,.45);
+  }
+  .atardecer__badge{
+    position:absolute;
+    top:8px; right:9px;
+    padding:3px 7px;
+    border-radius:999px;
+    border:1px solid rgba(255,240,210,.35);
+    background:rgba(10,10,25,.35);
+    font-size:.42rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:#fff3d6;
+  }
+  .atardecer__frase{
+    margin:0;
+    padding:11px 12px 13px;
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:clamp(.78rem, 3.3vw, .88rem);
+    line-height:1.45;
+    color:#e8e2d2;
+  }
+  .atardecer--final .atardecer__cielo::before{
+    content:'';
+    position:absolute; inset:0;
+    background-image:
+      radial-gradient(1.4px 1.4px at 18% 22%, rgba(255,255,255,.75), transparent 100%),
+      radial-gradient(1.2px 1.2px at 32% 12%, rgba(255,255,255,.55), transparent 100%),
+      radial-gradient(1.6px 1.6px at 55% 18%, rgba(255,255,255,.7), transparent 100%),
+      radial-gradient(1.2px 1.2px at 72% 10%, rgba(255,255,255,.5), transparent 100%),
+      radial-gradient(1.5px 1.5px at 86% 24%, rgba(255,255,255,.65), transparent 100%),
+      radial-gradient(1.2px 1.2px at 8% 10%, rgba(255,255,255,.45), transparent 100%);
+    opacity:.8;
+  }
+  .atardecer--hoy{
+    border-color:rgba(232,193,95,.75);
+    box-shadow:0 0 0 1px rgba(232,193,95,.35), 0 0 26px rgba(232,193,95,.2);
+  }
+  .atardecer--hoy .atardecer__frase{ color:#fff8e8; }
+  .atardecer--hoy .atardecer__badge{
+    background:rgba(232,193,95,.92);
+    border-color:transparent;
+    color:#241b05;
+  }
+
+  /* Lista */
+  .lista{
+    list-style:none; margin:16px 0 0; padding:0;
+    text-align:left;
+  }
+  .lista li + li{ border-top:1px solid rgba(232,193,95,.08); }
+  .lista button{
+    display:flex; align-items:center; gap:14px;
+    width:100%;
+    padding:14px 2px;
+    background:none; border:0;
+    color:#d3d7e7;
+    font-size:.94rem; font-weight:300; text-align:left;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:color .25s;
+  }
+  .lista button:hover{ color:var(--crema); }
+  .lista .marca{
+    flex:none;
+    position:relative;
+    width:22px; height:22px;
+    border-radius:50%;
+    border:1px solid rgba(232,193,95,.45);
+    display:grid; place-items:center;
+    transition:background .3s, border-color .3s;
+  }
+  .lista .marca svg{
+    width:11px; height:11px;
+    color:#241b05;
+    opacity:0;
+    transform:scale(.4) rotate(-25deg);
+    transition:opacity .3s, transform .35s cubic-bezier(.2,1.4,.4,1);
+  }
+  .lista button[aria-pressed="true"]{ color:#8f96b4; }
+  .lista button[aria-pressed="true"] .marca{ background:var(--oro); border-color:var(--oro); }
+  .lista button[aria-pressed="true"] .marca svg{ opacity:1; transform:scale(1) rotate(0); }
+  .lista button[aria-pressed="true"] .txt{ text-decoration:line-through; text-decoration-color:rgba(232,193,95,.5); }
+
+  /* Vales */
+  .vales{ display:grid; gap:12px; margin:18px 0 0; }
+  .vale{
+    position:relative;
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:16px 16px 16px 20px;
+    border-radius:14px;
+    border:1px dashed rgba(232,193,95,.35);
+    background:linear-gradient(120deg, rgba(232,193,95,.08), rgba(232,193,95,.02));
+    text-align:left;
+    overflow:hidden;
+    transition:border-color .3s, background .3s, opacity .3s;
+  }
+  .vale__txt small{
+    display:block;
+    font-size:.53rem; letter-spacing:.3em; text-transform:uppercase;
+    color:#a98f5e; margin-bottom:.3rem;
+  }
+  .vale__txt h4{
+    margin:0;
+    font-family:var(--serif); font-weight:500;
+    font-size:1.12rem; line-height:1.3;
+    color:var(--crema);
+  }
+  .vale__btn{
+    flex:none;
+    min-height:36px;
+    padding:0 14px;
+    border-radius:999px;
+    border:1px solid rgba(232,193,95,.5);
+    background:transparent;
+    color:var(--oro-claro);
+    font-size:.6rem; letter-spacing:.16em; text-transform:uppercase;
+    cursor:pointer;
+    transition:background .3s, color .3s, border-color .3s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .vale__btn:hover{ background:var(--oro); color:#231b05; border-color:var(--oro); }
+  .vale__btn:focus-visible{ outline:2px solid var(--oro-claro); outline-offset:3px; }
+  .vale.usado{ border-style:solid; border-color:rgba(232,193,95,.18); opacity:.62; }
+  .vale.usado .vale__btn{ background:transparent; color:#7d859f; border-color:rgba(255,255,255,.15); cursor:default; }
+  .vale__sello{
+    position:absolute; right:12px; top:50%;
+    transform:translateY(-50%) rotate(-12deg) scale(.7);
+    padding:3px 10px;
+    border:1px solid rgba(232,193,95,.7);
+    border-radius:4px;
+    font-size:.55rem; letter-spacing:.24em; text-transform:uppercase;
+    color:var(--oro);
+    opacity:0; pointer-events:none;
+    transition:opacity .35s, transform .45s cubic-bezier(.2,1.4,.4,1);
+  }
+  .vale.usado .vale__sello{ opacity:.9; transform:translateY(-50%) rotate(-12deg) scale(1); }
+  .vale.usado .vale__btn{ visibility:hidden; }
+
+  /* Ruleta */
+  .ruleta-envoltura{
+    position:relative;
+    width:min(260px, 74vw);
+    aspect-ratio:1;
+    margin:22px auto 20px;
+  }
+  .ruleta{
+    position:relative;
+    width:100%; height:100%;
+    border-radius:50%;
+    background:conic-gradient(
+      #f0d38a 0deg 72deg,
+      #c9a24a 72deg 144deg,
+      #f0d38a 144deg 216deg,
+      #c9a24a 216deg 288deg,
+      #f0d38a 288deg 360deg
+    );
+    box-shadow:0 0 0 10px rgba(232,193,95,.08), 0 0 0 11px rgba(232,193,95,.25), 0 22px 40px rgba(0,0,0,.45);
+    transition:transform 4s cubic-bezier(.16,.84,.16,1);
+    overflow:hidden;
+  }
+  .ruleta::after{
+    content:'';
+    position:absolute; inset:0;
+    border-radius:50%;
+    background:radial-gradient(circle at 50% 50%, rgba(255,249,230,.55) 0 8%, transparent 9%),
+               radial-gradient(circle at 50% 50%, transparent 55%, rgba(90,60,10,.18) 100%);
+  }
+  .ruleta__et{
+    position:absolute; left:50%; top:50%;
+    width:0; height:0;
+    font-size:.7rem;
+    letter-spacing:.02em;
+    font-weight:500;
+    color:#2c2308;
+    white-space:nowrap;
+  }
+  .ruleta__et span{
+    position:absolute;
+    left:0; top:0;
+    transform:translate(-50%,-50%);
+  }
+  .ruleta__aguja{
+    position:absolute; left:50%; top:-14px;
+    width:0; height:0;
+    transform:translateX(-50%);
+    border-left:11px solid transparent;
+    border-right:11px solid transparent;
+    border-top:20px solid var(--oro);
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,.5));
+    z-index:3;
+  }
+  .ruleta__eje{
+    position:absolute; left:50%; top:50%;
+    width:48px; height:48px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    display:grid; place-items:center;
+    background:radial-gradient(circle at 36% 30%, #fff4cd, #e8c15f 55%, #b98d2b);
+    box-shadow:0 6px 16px rgba(0,0,0,.45), inset 0 -2px 6px rgba(120,85,10,.35);
+    color:#2b2208;
+    z-index:2;
+  }
+  .ruleta__eje svg{ width:20px; height:20px; }
+  .ruleta__res{
+    min-height:2.6em;
+    margin:0;
+    font-family:var(--serif);
+    font-size:1.12rem;
+    font-style:italic;
+    line-height:1.4;
+    color:var(--oro-claro);
+    transition:opacity .4s;
+  }
+
+  /* Cierre */
+  .cierre{
+    text-align:center;
+    padding:clamp(16px,4vh,30px) 10px 0;
+  }
+  .cierre p{
+    margin:0 auto;
+    max-width:28ch;
+    font-family:var(--serif);
+    font-size:clamp(1.35rem,5.6vw,1.7rem);
+    font-style:italic;
+    line-height:1.55;
+    color:var(--oro-claro);
+  }
+  .cierre .firma{
+    display:block;
+    margin-top:16px;
+    font-family:var(--serif);
+    font-size:clamp(1.8rem,7vw,2.3rem);
+    font-style:italic;
+    color:var(--crema);
+  }
+  .cierre .firma small{
+    display:block;
+    margin-top:.5rem;
+    font-family:var(--sans); font-style:normal;
+    font-size:.54rem; letter-spacing:.3em; text-transform:uppercase;
+    color:#a98f5e;
+  }
+  .pie{
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    margin-top:10px; padding-bottom:8px;
+    font-size:.56rem; letter-spacing:.28em; text-transform:uppercase;
+    color:#7c83a3;
+  }
+  .pie svg{ width:14px; height:14px; color:#8ab98c; }
+
+  /* ============ MODAL CARTA ============ */
+  .modal{
+    position:fixed; inset:0; z-index:60;
+    display:grid; place-items:center;
+    padding:20px;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .45s ease, visibility .45s;
+  }
+  .modal.abierto{ opacity:1; visibility:visible; }
+  .modal__fondo{
+    position:absolute; inset:0;
+    background:rgba(3,6,18,.78);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+  }
+  .carta-modal{
+    position:relative;
+    width:min(520px, 100%);
+    max-height:min(86vh, 820px);
+    overflow-y:auto;
+    padding:clamp(28px,7vw,46px) clamp(22px,6vw,40px);
+    border-radius:22px;
+    border:1px solid rgba(232,193,95,.45);
+    background:
+      radial-gradient(120% 70% at 50% 0%, rgba(232,193,95,.1), transparent 60%),
+      linear-gradient(180deg,#101a40,#0a1129);
+    box-shadow:0 40px 90px rgba(0,0,0,.6);
+    text-align:center;
+    transform:translateY(24px) scale(.97);
+    transition:transform .5s cubic-bezier(.22,.9,.28,1);
+  }
+  .modal.abierto .carta-modal{ transform:none; }
+  .carta-modal::-webkit-scrollbar{ width:8px; }
+  .carta-modal::-webkit-scrollbar-thumb{ background:rgba(232,193,95,.3); border-radius:99px; }
+
+  .carta-modal h2{
+    margin:0 0 18px;
+    font-family:var(--serif); font-weight:500; font-style:italic;
+    font-size:clamp(2rem,8vw,2.5rem);
+    color:var(--oro-claro);
+    line-height:1.1;
+  }
+  .carta-modal p{
+    margin:0 0 1em;
+    font-family:var(--serif);
+    font-size:clamp(1.06rem,4.2vw,1.2rem);
+    font-style:italic;
+    line-height:1.75;
+    color:#ded7c6;
+  }
+  .carta-modal .carta-firma{
+    margin:24px 0 26px;
+    font-family:var(--sans); font-style:normal;
+    font-size:.58rem; letter-spacing:.34em; text-transform:uppercase;
+    color:#b49a63;
+  }
+  .carta-modal .carta-firma span{
+    display:block;
+    margin-top:10px;
+    font-family:var(--serif); font-style:italic; text-transform:none;
+    letter-spacing:.01em;
+    font-size:1.9rem;
+    color:var(--crema);
+  }
+  .carta-cerrar{
+    position:absolute; top:12px; right:12px;
+    width:38px; height:38px;
+    display:grid; place-items:center;
+    border-radius:50%;
+    border:1px solid rgba(232,193,95,.25);
+    background:rgba(7,12,30,.5);
+    color:#d9cba8;
+    cursor:pointer;
+    transition:background .25s, color .25s;
+  }
+  .carta-cerrar:hover{ background:rgba(232,193,95,.18); color:#fff; }
+  .carta-cerrar svg{ width:15px; height:15px; }
+
+  .carta-extra{
+    margin-top:26px;
+    padding-top:24px;
+    border-top:1px solid rgba(232,193,95,.26);
+  }
+  .carta-extra__intro{
+    margin:0 0 16px !important;
+    font-size:1rem !important;
+    color:#bfb8a6 !important;
+  }
+  .carta-mano{
+    display:block;
+    width:100%;
+    padding:0;
+    border:1px solid rgba(232,193,95,.35);
+    border-radius:10px;
+    background:#fff;
+    overflow:hidden;
+    cursor:zoom-in;
+    box-shadow:0 18px 38px rgba(0,0,0,.5);
+    transition:transform .3s, box-shadow .3s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .carta-mano:hover{ transform:translateY(-2px); box-shadow:0 24px 46px rgba(0,0,0,.55); }
+  .carta-mano:focus-visible{ outline:2px solid var(--oro-claro); outline-offset:4px; }
+  .carta-mano img{ display:block; width:100%; height:auto; }
+  .carta-mano__pie{
+    margin:10px 0 0 !important;
+    font-family:var(--sans) !important;
+    font-style:normal !important;
+    font-size:.55rem !important;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:#a98f5e !important;
+  }
+  .carta-extra + .btn-contorno{ margin-top:26px; }
+
+  /* Visor de la carta a mano */
+  .visor{
+    position:fixed; inset:0; z-index:90;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:66px 14px 40px;
+    background:rgba(3,6,16,.96);
+    overflow:auto;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .35s ease, visibility .35s;
+  }
+  .visor.abierto{ opacity:1; visibility:visible; }
+  .visor img{
+    width:min(1000px, 100%);
+    height:auto;
+    border-radius:6px;
+    background:#fff;
+    box-shadow:0 30px 60px rgba(0,0,0,.6);
+    cursor:zoom-in;
+    transition:width .35s ease;
+  }
+  .visor img.zoom{ width:min(1800px, 175vw); cursor:zoom-out; }
+  .visor__cerrar{
+    position:fixed;
+    top:max(16px, env(safe-area-inset-top));
+    right:16px;
+    z-index:2;
+    width:44px; height:44px;
+    display:grid; place-items:center;
+    border-radius:50%;
+    border:1px solid rgba(232,193,95,.4);
+    background:rgba(7,12,30,.9);
+    color:#e9d9b4;
+    cursor:pointer;
+    transition:background .25s, color .25s;
+  }
+  .visor__cerrar:hover{ background:rgba(232,193,95,.2); color:#fff; }
+  .visor__cerrar svg{ width:18px; height:18px; }
+
+  /* Modal de fotos por parada */
+  .lugar-modal{
+    position:relative;
+    width:min(560px, 100%);
+    max-height:min(88vh, 880px);
+    overflow-y:auto;
+    padding:clamp(26px,6.5vw,40px);
+    border-radius:22px;
+    border:1px solid rgba(232,193,95,.45);
+    background:
+      radial-gradient(120% 70% at 50% 0%, rgba(232,193,95,.1), transparent 60%),
+      linear-gradient(180deg,#101a40,#0a1129);
+    box-shadow:0 40px 90px rgba(0,0,0,.6);
+    text-align:center;
+  }
+  .lugar-modal::-webkit-scrollbar{ width:8px; }
+  .lugar-modal::-webkit-scrollbar-thumb{ background:rgba(232,193,95,.3); border-radius:99px; }
+  .lugar-modal h2{
+    margin:0 0 6px;
+    font-family:var(--serif); font-weight:500; font-style:italic;
+    font-size:clamp(2rem,8vw,2.5rem); line-height:1.1;
+    color:var(--oro-claro);
+  }
+  .lugar-modal__fecha{
+    margin:0;
+    font-size:.58rem; letter-spacing:.2em; text-transform:uppercase;
+    color:#a98f5e;
+  }
+  .lugar-fotos{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:20px;
+  }
+  .lugar-fotos figure{
+    position:relative;
+    margin:0;
+    aspect-ratio:1/1;
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid rgba(232,193,95,.18);
+    background:#0a1029;
+  }
+  .lugar-fotos img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .lugar-fotos figure:last-child:nth-child(odd){ grid-column:1 / -1; aspect-ratio:16/9; }
+
+  /* ============ FLOTANTES ============ */
+  .flotador{
+    position:fixed; z-index:40;
+    display:grid; place-items:center;
+    width:44px; height:44px;
+    border-radius:50%;
+    border:1px solid rgba(232,193,95,.32);
+    background:rgba(7,12,30,.8);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    color:var(--oro-claro);
+    cursor:pointer;
+    box-shadow:0 8px 20px rgba(0,0,0,.3);
+    transition:background .25s, transform .25s, border-color .25s, opacity .35s;
+    -webkit-tap-highlight-color:transparent;
+    top:max(14px, env(safe-area-inset-top));
+  }
+  .flotador:hover{ background:rgba(26,36,74,.92); border-color:rgba(232,193,95,.65); transform:translateY(-1px); }
+  .flotador:focus-visible{ outline:2px solid var(--oro-claro); outline-offset:3px; }
+  .flotador svg{ width:19px; height:19px; }
+  .flotador.musica{ right:14px; }
+  .flotador.musica svg{ transition:opacity .3s, transform .3s; }
+  .flotador.musica[aria-pressed="false"] svg{ opacity:.55; }
+  .flotador.musica[aria-pressed="true"]{ background:rgba(232,193,95,.92); color:#241c04; border-color:#ffe9a8; }
+  .flotador.musica[aria-pressed="true"] svg{ opacity:1; transform:scale(1.05); }
+
+  .volver{
+    left:14px; opacity:0; visibility:hidden; pointer-events:none;
+  }
+  body.abierto .volver{ opacity:1; visibility:visible; pointer-events:auto; }
+
+  /* ============ AJUSTES ============ */
+  @media (max-height:700px){
+    .intro{ gap:10px; }
+    .sobre-envoltura{ width:min(370px,78vw); }
+    .titulo{ font-size:clamp(3rem,13vw,4.4rem); }
+  }
+
+  @media (max-width:700px){
+    .foto-flotante{ opacity:.55; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *, *::before, *::after{
+      animation-duration:.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:.15s !important;
+    }
+    .flotante, .petalos, .jardin, .burst, .fotos-flotantes{ display:none; }
+    .revelar{ opacity:1; transform:none; }
+    .ruleta{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="fondo" id="fondo" aria-hidden="true"></div>
+<div class="petalos" id="petalos" aria-hidden="true"></div>
+<div class="fotos-flotantes" aria-hidden="true">
+  <figure class="foto-flotante" style="left:1.5%; top:14%; width:76px; --r:-8deg; --d:9s; --delay:0s"><img src="fotos/metro-mall-1.jpg" alt=""></figure>
+  <figure class="foto-flotante" style="right:2.5%; top:25%; width:64px; --r:7deg; --d:10.5s; --delay:-2s"><img src="fotos/centro-civico-3.jpg" alt=""></figure>
+  <figure class="foto-flotante" style="left:3%; top:61%; width:70px; --r:6deg; --d:11s; --delay:-4s"><img src="fotos/centro-civico-5.jpg" alt=""></figure>
+  <figure class="foto-flotante" style="right:1.5%; top:71%; width:82px; --r:-7deg; --d:8.5s; --delay:-1s"><img src="fotos/metro-mall-3.jpg" alt=""></figure>
+</div>
+<div class="burst" id="burst" aria-hidden="true"></div>
+
+<!-- ================= INTRO ================= -->
+<main class="intro" id="intro">
+  <div class="jardin" id="jardin" aria-hidden="true"></div>
+  <div class="intro__texto">
+    <p class="subtitulo">Un regalo para ti</p>
+    <h1 class="titulo">Melida</h1>
+    <div class="divisor" aria-hidden="true">
+      <span></span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <span></span>
+    </div>
+  </div>
+
+  <div class="sobre-envoltura">
+    <div class="sobre" id="sobre" role="button" tabindex="0" aria-label="Abrir el sobre">
+      <div class="sobre__cuerpo"></div>
+      <div class="sobre__papel" aria-hidden="true">
+        <span>Para ti</span>
+        <i></i>
+        <em>con amor</em>
+      </div>
+      <div class="sobre__solapa solapa-izq"></div>
+      <div class="sobre__solapa solapa-der"></div>
+      <div class="sobre__solapa solapa-inf"></div>
+      <div class="sobre__solapa solapa-sup"></div>
+      <div class="sello" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <button class="boton" id="abrir" type="button">Toca para abrir</button>
+</main>
+
+<!-- ================= SITIO ================= -->
+<main class="sitio" id="sitio" tabindex="-1">
+
+  <header class="hero">
+    <p class="hero__etiqueta">Nuestra historia</p>
+    <h1 class="hero__nombres">Marcelo <span class="amp">&amp;</span> Melida</h1>
+    <span class="hero__linea" aria-hidden="true">
+      <i></i>
+      <svg viewBox="0 0 64 64" fill="currentColor">
+        <path d="M32 41c-6.6 0-12-5.4-12-12V15.5c0-2.2 2.6-3.2 4.1-1.5L32 22l7.9-8c1.5-1.7 4.1-.7 4.1 1.5V29c0 6.6-5.4 12-12 12Z"/>
+        <path d="M32 40v14" stroke="#78a56a" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <path d="M32 54c-6.4-1.6-9.6-6-9.6-11.2 5.7 0 9.6 4.3 9.6 11.2Z" fill="#78a56a"/>
+      </svg>
+      <i></i>
+    </span>
+    <p class="hero__lugar">Guatemala <span>·</span> Honduras</p>
+  </header>
+
+  <figure class="marco revelar">
+    <div class="marco__foto">
+      <img src="fotos/metro-mall-1.jpg" alt="Melida soplando las velas de su cumpleaños en Metro Mall" loading="lazy">
+    </div>
+    <figcaption>Tu cumpleaños · Metro Mall, 5 de septiembre de 2026.</figcaption>
+  </figure>
+
+  <section class="panel revelar">
+    <div class="contador-bloque">
+      <p class="etiqueta">Tiempo de conocernos</p>
+      <p class="contador__nota">( primer saludo )</p>
+      <p class="contador__fecha">27 de noviembre de 2024 · 22:13</p>
+      <p class="contador__grande" id="contadorGrande">Calculando…</p>
+      <p class="contador__reloj" id="contadorReloj" aria-live="off">00h 00m 00s</p>
+    </div>
+
+    <div class="contador-sep" aria-hidden="true">
+      <span></span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <span></span>
+    </div>
+
+    <div class="contador-bloque">
+      <p class="etiqueta">Tiempo de estar juntos</p>
+      <p class="contador__nota">( la pregunta )</p>
+      <p class="contador__fecha">14 de julio de 2026</p>
+      <p class="contador__grande" id="contadorJuntos">Calculando…</p>
+      <p class="contador__reloj" id="relojJuntos" aria-live="off">00h 00m 00s</p>
+      <p class="contador__total" id="totalJuntos">…</p>
+    </div>
+  </section>
+
+  <section class="panel revelar">
+    <p class="etiqueta">Mensaje privado</p>
+    <div class="sobre-arte" aria-hidden="true">
+      <span class="corchete"></span><span class="corchete"></span><span class="corchete"></span><span class="corchete"></span>
+      <svg viewBox="0 0 300 200" fill="none" stroke="rgba(232,193,95,.65)" stroke-width="1.1">
+        <rect x="1" y="1" width="298" height="198" rx="14"/>
+        <path d="M2 2 L150 108 L298 2"/>
+        <path d="M2 198 L150 108 L298 198" stroke="rgba(232,193,95,.22)"/>
+      </svg>
+      <div class="sello-carta">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </div>
+    </div>
+    <button class="btn-contorno" id="abrirCarta" type="button">Abrir carta</button>
+  </section>
+
+  <figure class="marco revelar">
+    <div class="marco__foto">
+      <img src="fotos/centro-civico-3.jpg" alt="Dos bebidas azules y una bolsa de McDonald's en el Centro Cívico" loading="lazy">
+    </div>
+    <figcaption>Nuestro primer encuentro · Centro Cívico, 4 de septiembre de 2026.</figcaption>
+  </figure>
+
+  <section class="panel revelar">
+    <p class="etiqueta">Lo que más amo de ti</p>
+    <h2 class="titulo-panel" id="tituloGustos">Melida</h2>
+    <ul class="gustos" id="gustos"></ul>
+  </section>
+
+  <section class="panel revelar">
+    <p class="etiqueta">Nuestros momentos</p>
+    <h2 class="titulo-panel">La historia que llevamos</h2>
+    <div class="momentos" id="momentos"></div>
+  </section>
+
+  <section class="panel revelar">
+    <p class="etiqueta">Dos países, una historia</p>
+    <h2 class="titulo-panel">Nuestra distancia</h2>
+    <p class="sub-panel">Guatemala y Honduras. Un bus, muchas llamadas y las ganas de volver a vernos.</p>
+    <div class="mapa mapa--distancia" aria-hidden="true">
+      <svg viewBox="0 0 400 250" fill="none">
+        <path id="rutaBus" d="M70 170 C 150 40, 250 40, 330 170"
+              stroke="rgba(232,193,95,.5)" stroke-width="1.6" stroke-dasharray="2 7" stroke-linecap="round"/>
+        <g id="busViaje" opacity=".95">
+          <g fill="#e8c15f" transform="scale(1.25)">
+            <rect x="-15" y="-8" width="30" height="13" rx="3"/>
+            <path d="M-15 -8h18l7 6v7h-25Z" fill="#f4dda2"/>
+            <rect x="-11" y="-5" width="6" height="4.5" rx="1" fill="#0a1230"/>
+            <rect x="-2" y="-5" width="6" height="4.5" rx="1" fill="#0a1230"/>
+            <rect x="7" y="-2.5" width="5" height="4" rx="1" fill="#0a1230"/>
+            <circle cx="-8" cy="6.5" r="2.6" fill="#0a1230"/>
+            <circle cx="8" cy="6.5" r="2.6" fill="#0a1230"/>
+            <circle cx="-8" cy="6.5" r="1" fill="#e8c15f"/>
+            <circle cx="8" cy="6.5" r="1" fill="#e8c15f"/>
+          </g>
+        </g>
+      </svg>
+      <div class="ciudad" style="left:17.5%; top:68%">
+        <span class="ciudad__punto"></span>
+        <span class="ciudad__nombre">Guatemala</span>
+      </div>
+      <div class="ciudad" style="left:82.5%; top:68%">
+        <span class="ciudad__punto"></span>
+        <span class="ciudad__nombre">Honduras</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel revelar">
+    <p class="etiqueta">Puntos del viaje</p>
+    <h2 class="titulo-panel">Nuestros lugares</h2>
+    <p class="sub-panel">Toca un pin o una parada para ver las fotos.</p>
+    <div class="mapa-paradas" id="mapaParadas" role="application" aria-label="Mapa de los lugares que visitamos"></div>
+    <a class="mapa-google__link" id="enlaceMapa" href="https://www.google.com/maps/search/?api=1&amp;query=Centro+C%C3%ADvico%2C+Tegucigalpa%2C+Honduras" target="_blank" rel="noopener">Abrir en Google Maps</a>
+    <div class="paradas" id="paradas"></div>
+  </section>
+
+  <figure class="marco revelar">
+    <div class="marco__foto">
+      <img src="fotos/metro-mall-3.jpg" alt="Melida en la comida del Metro Mall" loading="lazy">
+    </div>
+    <figcaption>Metro Mall · 5 de septiembre de 2026.</figcaption>
+  </figure>
+
+  <section class="panel revelar">
+    <p class="etiqueta">4 y 5 de septiembre de 2026</p>
+    <h2 class="titulo-panel">Los días que se volvieron nuestros</h2>
+    <div class="galeria">
+      <figure><img src="fotos/centro-civico-1.jpg" alt="Plaza del Centro Cívico" loading="lazy"><figcaption>Centro Cívico</figcaption></figure>
+      <figure><img src="fotos/centro-civico-5.jpg" alt="Torre Chortí" loading="lazy"><figcaption>Torre Chortí</figcaption></figure>
+      <figure><img src="fotos/centro-civico-4.jpg" alt="Pérgola y flores del Centro Cívico" loading="lazy"><figcaption>Centro Cívico</figcaption></figure>
+      <figure><img src="fotos/centro-civico-2.jpg" alt="Vista de la plaza desde arriba" loading="lazy"><figcaption>Centro Cívico</figcaption></figure>
+      <figure><img src="fotos/centro-civico-6.jpg" alt="Pasillo del Centro Cívico" loading="lazy"><figcaption>Centro Cívico</figcaption></figure>
+      <figure><img src="fotos/metro-mall-2.jpg" alt="Caminando por Metro Mall" loading="lazy"><figcaption>Metro Mall</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="panel revelar">
+    <p class="etiqueta">Cuenta regresiva</p>
+    <h2 class="titulo-panel">Siete atardeceres</h2>
+    <p class="sub-panel">Del 21 al 27 de noviembre, los cielos que faltan para tu graduación.</p>
+
+    <div class="cuenta">
+      <span class="cuenta__num" id="cuentaNum" aria-hidden="true">7</span>
+      <p class="cuenta__label" id="cuentaLabel">atardeceres para tu graduación</p>
+      <p class="cuenta__reloj" id="relojAtardecer" aria-live="off">Faltan — para tu graduación</p>
+    </div>
+
+    <ol class="soles" id="soles"></ol>
+  </section>
+
+  <section class="panel revelar">
+    <p class="etiqueta">Cosas que quiero hacer contigo</p>
+    <h2 class="titulo-panel">Nuestra lista</h2>
+    <ul class="lista" id="lista"></ul>
+  </section>
+
+  <section class="panel revelar">
+    <p class="etiqueta">Para ti</p>
+    <h2 class="titulo-panel">Nuestros vales de amor</h2>
+    <p class="sub-panel">Canjéalos cuando quieras. Solo se pueden usar una vez.</p>
+    <div class="vales" id="vales"></div>
+  </section>
+
+  <section class="panel revelar">
+    <p class="etiqueta">Para ti</p>
+    <h2 class="titulo-panel">La ruleta tiene una pregunta</h2>
+    <p class="sub-panel">Gira… y responde con el corazón.</p>
+    <div class="ruleta-envoltura">
+      <div class="ruleta" id="ruleta"></div>
+      <div class="ruleta__aguja" aria-hidden="true"></div>
+      <div class="ruleta__eje" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </div>
+    </div>
+    <button class="btn-contorno" id="girar" type="button">Girar</button>
+    <p class="ruleta__res" id="resultadoRuleta" aria-live="polite">Puedes girar las veces que quieras.</p>
+  </section>
+
+  <section class="cierre revelar">
+    <p>Melida,<br>por todo lo que somos.<br>Te amo.</p>
+    <span class="firma">Marcelo<small>con todo mi amor</small></span>
+  </section>
+
+  <div class="jardin jardin--final revelar" id="jardinFinal" aria-hidden="true"></div>
+
+  <footer class="pie">
+    <svg viewBox="0 0 64 64" fill="currentColor" aria-hidden="true"><path d="M32 41c-6.6 0-12-5.4-12-12V15.5c0-2.2 2.6-3.2 4.1-1.5L32 22l7.9-8c1.5-1.7 4.1-.7 4.1 1.5V29c0 6.6-5.4 12-12 12Z"/><path d="M32 40v14" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none" opacity=".6"/></svg>
+    Hecho con amor para ti
+  </footer>
+</main>
+
+<!-- ================= MODAL CARTA ================= -->
+<div class="modal" id="modalCarta" role="dialog" aria-modal="true" aria-labelledby="tituloCarta" aria-hidden="true">
+  <div class="modal__fondo" data-cerrar-carta></div>
+  <div class="carta-modal">
+    <button class="carta-cerrar" type="button" data-cerrar-carta aria-label="Cerrar la carta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <p class="etiqueta">Para ti</p>
+    <h2 id="tituloCarta">Melida</h2>
+    <p>Melida: hay fechas que no se eligen, pero se quedan. El 27 de noviembre de 2024, a las 22:13, te escribí por primera vez.</p>
+    <p>El 14 de julio de 2026 dijiste que sí. El 4 de septiembre te vi llegar al Centro Cívico y entendí que tanta distancia valía la pena.</p>
+    <p>Gracias por ese cumpleaños en Metro Mall, por reírte conmigo, por despedirte en la terminal sin hacer drama y por quedarte incluso cuando estoy lejos.</p>
+    <p>Ojalá vuelvas a leer esto las veces que quieras. Yo voy a seguir aquí.</p>
+    <p class="carta-firma">Con amor<span>Marcelo</span></p>
+
+    <div class="carta-extra">
+      <p class="etiqueta">La carta</p>
+      <p class="carta-extra__intro">La que te escribí a mano el día de tu graduación.</p>
+      <button class="carta-mano" id="verCarta" type="button" aria-label="Ver la carta escrita a mano en tamaño completo">
+        <img src="fotos/carta-mano.jpg" alt="Carta escrita a mano para Melida" loading="lazy">
+      </button>
+      <p class="carta-mano__pie">Toca la carta para leerla completa</p>
+    </div>
+
+    <button class="btn-contorno" type="button" data-cerrar-carta>Cerrar</button>
+  </div>
+</div>
+
+<!-- Visor de la carta escrita a mano -->
+<div class="visor" id="visorCarta" role="dialog" aria-modal="true" aria-label="Carta escrita a mano" aria-hidden="true">
+  <button class="visor__cerrar" id="cerrarVisor" type="button" aria-label="Cerrar la carta ampliada">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <img src="fotos/carta-mano.jpg" alt="Carta escrita a mano para Melida">
+</div>
+
+<!-- Modal de fotos de una parada -->
+<div class="modal" id="modalLugar" role="dialog" aria-modal="true" aria-labelledby="tituloLugar" aria-hidden="true">
+  <div class="modal__fondo" data-cerrar-lugar></div>
+  <div class="lugar-modal">
+    <button class="carta-cerrar" type="button" data-cerrar-lugar aria-label="Cerrar las fotos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <p class="lugar-modal__fecha" id="fechaLugar">…</p>
+    <h2 id="tituloLugar">…</h2>
+    <div class="lugar-fotos" id="lugarFotos"></div>
+  </div>
+</div>
+
+<!-- Botones flotantes -->
+<button class="flotador volver" id="volver" type="button" aria-label="Volver al inicio">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+</button>
+<button class="flotador musica" id="musica" type="button" aria-pressed="false" aria-label="Encender música suave">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+  </svg>
+</button>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================================================
+   PERSONALIZA AQUÍ
+   ============================================================ */
+const ELLA = 'Melida';
+const EL   = 'Marcelo';
+
+// Primer saludo: desde aquí se cuenta el contador "Tiempo de conocernos".
+const FECHA_INICIO = '2024-11-27T22:13:00';
+
+// Inicio de la relación: se muestra en la línea de abajo del contador.
+const FECHA_RELACION = '2026-07-14';
+
+const GUSTOS = [
+  'Tu risa cuando algo te da un poco de pena.',
+  'Cómo cuidas a la gente que quieres, sin que nadie te lo pida.',
+  'Tu forma de decir mi nombre cuando estás cansada.',
+  'Que contigo hasta lo aburrido termina siendo divertido.'
+];
+
+const MOMENTOS = [
+  { fecha:'27 nov 2024 · 22:13', titulo:'El primer saludo', texto:'Te escribí a las 22:13 sin saber que esa conversación iba a cambiarme el año entero.' },
+  { fecha:'14 jul 2026', titulo:'La pregunta', texto:'Después de miles de mensajes te pregunté si querías ser mi novia. Dijiste que sí, y desde entonces todo tiene otro nombre: nosotros.' },
+  { fecha:'4 sep 2026 · 12:00', titulo:'El primer encuentro', texto:'Centro Cívico, Tegucigalpa. Llegaste a las doce y, por un momento, todo lo que había esperado se quedó quieto.' },
+  { fecha:'5 sep 2026 · 12:30', titulo:'Metro Mall', texto:'Al día siguiente te vi otra vez. Era tu cumpleaños y yo solo quería que ese día te recordara a mí.' },
+  { fecha:'7 sep 2026 · 05:30', titulo:'El regreso en bus', texto:'A las 5:30 de la mañana salió mi bus. Desde entonces la distancia es solo el espacio entre una llamada y la siguiente.' },
+  { fecha:'Hoy', titulo:'Lo que viene', texto:'Esto no es un repaso del pasado: es una promesa. Todavía nos quedan muchísimos capítulos por escribir juntos.' }
+];
+
+const PARADAS = [
+  {
+    id: 'centro-civico',
+    nombre: 'Centro Cívico',
+    fecha: '4 de septiembre de 2026 · 12:00 p.m.',
+    mapa: 'Centro Cívico, Tegucigalpa, Honduras',
+    lat: 14.0882507,
+    lng: -87.1888340,
+    fotos: [
+      { src: 'fotos/centro-civico-1.jpg', alt: 'Plaza del Centro Cívico' },
+      { src: 'fotos/centro-civico-2.jpg', alt: 'Vista de la plaza desde arriba' },
+      { src: 'fotos/centro-civico-3.jpg', alt: 'Bebidas y McDonald\'s del primer encuentro' },
+      { src: 'fotos/centro-civico-4.jpg', alt: 'Pérgola y flores del Centro Cívico' },
+      { src: 'fotos/centro-civico-5.jpg', alt: 'Torre Chortí' },
+      { src: 'fotos/centro-civico-6.jpg', alt: 'Pasillo del Centro Cívico' }
+    ]
+  },
+  {
+    id: 'metro-mall',
+    nombre: 'Metro Mall',
+    fecha: '5 de septiembre de 2026 · 12:30 p.m.',
+    mapa: 'Metro Mall, Tegucigalpa, Honduras',
+    lat: 14.0747879,
+    lng: -87.2127252,
+    fotos: [
+      { src: 'fotos/metro-mall-1.jpg', alt: 'Melida soplando las velas de su cumpleaños' },
+      { src: 'fotos/metro-mall-2.jpg', alt: 'Caminando por Metro Mall' },
+      { src: 'fotos/metro-mall-3.jpg', alt: 'Comida en Metro Mall' }
+    ]
+  }
+];
+
+const LISTA = [
+  'Viajar juntos',
+  'Ver el amanecer',
+  'Cocinar juntos',
+  'Bailar en cada cocina que tengamos'
+];
+
+const VALES = [
+  'Vale por una cena',
+  'Vale por un masaje',
+  'Vale por un día solo nuestro',
+  'Vale por un café en la cama'
+];
+
+const RULETA = ['Cena', 'Cine', 'Helado', 'Baile', 'Sorpresa'];
+
+const ATARDECERES = [
+  { n: '07', frase: 'Siete atardeceres y el cielo ya sabe que se acerca tu graduación.',
+    cielo: { c1: '#241a44', c2: '#7c4a76', c3: '#f0a06a', sol: '#ffd9a0', tierra: '#120f26', sx: '38%', sy: '24%', ss: '25%' } },
+  { n: '06', frase: 'Seis. Cada día que cae te acerca un poco más a ese título que tanto buscaste.',
+    cielo: { c1: '#1e1b3e', c2: '#a14f52', c3: '#f3bd6a', sol: '#ffe3a8', tierra: '#150f1f', sx: '62%', sy: '30%', ss: '28%' } },
+  { n: '05', frase: 'Cinco. A esta hora, en algún lugar, tú también estás contando los días.',
+    cielo: { c1: '#2a1f45', c2: '#8b5a7e', c3: '#eda17c', sol: '#ffd0a8', tierra: '#100e22', sx: '50%', sy: '34%', ss: '23%' } },
+  { n: '04', frase: 'Cuatro. Todo el esfuerzo de estos años cabe en una sola palabra: orgullo.',
+    cielo: { c1: '#17203c', c2: '#3f6577', c3: '#f0b562', sol: '#ffe2a4', tierra: '#0a1222', sx: '30%', sy: '28%', ss: '27%' } },
+  { n: '03', frase: 'Tres. Ya casi puedo contar las horas con una sola mano.',
+    cielo: { c1: '#2b2347', c2: '#a86a5e', c3: '#ffd3a0', sol: '#fff0c2', tierra: '#130f24', sx: '70%', sy: '32%', ss: '24%' } },
+  { n: '02', frase: 'Dos. El sol se despide despacio, como si supiera lo que viene.',
+    cielo: { c1: '#191634', c2: '#5a3d72', c3: '#e89b76', sol: '#ffd2a6', tierra: '#0b0d20', sx: '45%', sy: '38%', ss: '22%' } },
+  { n: '01', frase: 'Uno. Es tu graduación, y no hay cielo que alcance para lo orgulloso que estoy de ti.', final: true,
+    cielo: { c1: '#101a3a', c2: '#4d3a72', c3: '#f2a76b', sol: '#fff0bd', tierra: '#080d1e', sx: '76%', sy: '30%', ss: '17%' } }
+];
+
+// Fecha de la graduación: cuenta regresiva y último atardecer.
+const FECHA_GRADUACION = '2026-11-27T18:15:00';
+
+/* ============================================================
+   A PARTIR DE AQUÍ NO NECESITAS CAMBIAR NADA
+   ============================================================ */
+
+const $ = (s) => document.querySelector(s);
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const corazon = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+
+/* Pétalo y tulipán para los efectos */
+const petaloSVG = '<svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 1.6C7.1 7.1 4.1 12.7 4.1 18.7c0 6.6 3.5 11.7 7.9 11.7s7.9-5.1 7.9-11.7C19.9 12.7 16.9 7.1 12 1.6Z" fill="currentColor"/><path d="M12 7.5v18" stroke="rgba(0,0,0,.10)" stroke-width="1" stroke-linecap="round"/></svg>';
+
+const hojaSVG = '<svg viewBox="0 0 24 32" aria-hidden="true"><path d="M12 2C5.5 8.5 3 15 3 21.5 3 27 7 30 12 30s9-3 9-8.5C21 15 18.5 8.5 12 2Z" fill="currentColor"/><path d="M12 8v18" stroke="rgba(0,0,0,.12)" stroke-width="1" stroke-linecap="round"/></svg>';
+
+const tulipanSVG = '<svg viewBox="0 0 64 132" fill="none" aria-hidden="true"><path d="M32 36V126" stroke="#6f9f6a" stroke-width="3.4" stroke-linecap="round"/><path d="M32 84c-10-1-15.6-6.2-16.6-15.2 9.4 0 15 5.2 16.6 15.2Z" fill="#79a874"/><path d="M32 96c9-.9 14-5.2 15-13-8.4 0-13.5 4.4-15 13Z" fill="#5c8b58"/><path d="M32 104c-13-1.6-20-9-21-21 12 0 19 7.5 21 21Z" fill="#6f9f6a"/><path d="M32 118c12-1 18.5-7.5 19.5-18-10.5 0-17.5 6-19.5 18Z" fill="#5c8b58"/><path d="M32 6c-3.6 3.8-6.1 8.2-6.1 13.4v6.2c0 8.2 2.7 13.4 6.1 13.4s6.1-5.2 6.1-13.4v-6.2C38.1 14.2 35.6 9.8 32 6Z" fill="currentColor"/><path d="M25.9 13.5c-4.6 3.6-7.2 8.7-7.2 14.3 0 6.2 2.6 10.8 6.1 12.2V26.5c0-4.1.2-8 1.1-13Z" fill="currentColor" opacity=".92"/><path d="M38.1 13.5c4.6 3.6 7.2 8.7 7.2 14.3 0 6.2-2.6 10.8-6.1 12.2V26.5c0-4.1-.2-8-1.1-13Z" fill="currentColor" opacity=".92"/></svg>';
+
+/* ---------- Textos con el nombre ---------- */
+$('.hero__nombres').innerHTML = `${EL} <span class="amp">&amp;</span> ${ELLA}`;
+$('#tituloGustos').textContent = ELLA;
+$('#tituloCarta').textContent = ELLA;
+$('.carta-firma span').textContent = EL;
+$('.cierre .firma').firstChild.nodeValue = EL;
+
+/* ---------- Lo que amo de ti ---------- */
+$('#gustos').innerHTML = GUSTOS.map(g => `<li>${corazon}<span>${g}</span></li>`).join('');
+
+/* ---------- Momentos ---------- */
+$('#momentos').innerHTML = MOMENTOS.map((m, i) => `
+  <div class="momento">
+    <span class="momento__cap">${String(i + 1).padStart(2, '0')} · ${m.fecha}</span>
+    <h3>${m.titulo}</h3>
+    <p>${m.texto}</p>
+  </div>`).join('');
+
+/* ---------- Paradas (Google Maps + fotos) ---------- */
+$('#paradas').innerHTML = PARADAS.map((p, i) => `
+  <button class="parada" type="button" data-parada="${p.id}">
+    <span class="parada__num">${String(i + 1).padStart(2, '0')}</span>
+    <span class="parada__txt"><b>${p.nombre}</b><small>${p.fecha}</small></span>
+    <span class="parada__fotos">${p.fotos.length} fotos</span>
+  </button>`).join('');
+
+/* ---------- Atardeceres ---------- */
+$('#soles').innerHTML = ATARDECERES.map(a => `
+  <li class="atardecer${a.final ? ' atardecer--final' : ''}" data-dia="${Number(a.n)}">
+    <div class="atardecer__cielo" style="--c1:${a.cielo.c1};--c2:${a.cielo.c2};--c3:${a.cielo.c3};--sol:${a.cielo.sol};--tierra:${a.cielo.tierra};--sx:${a.cielo.sx};--sy:${a.cielo.sy};--ss:${a.cielo.ss}">
+      <span class="atardecer__sol" aria-hidden="true"></span>
+      <span class="atardecer__horizonte" aria-hidden="true"></span>
+      <span class="atardecer__num">${a.n}</span>
+      <span class="atardecer__badge"${a.final ? '' : ' hidden'}>${a.final ? '27 NOV' : ''}</span>
+    </div>
+    <p class="atardecer__frase">${a.frase}</p>
+  </li>`).join('');
+
+/* ---------- Lista ---------- */
+$('#lista').innerHTML = LISTA.map(t => `
+  <li>
+    <button type="button" aria-pressed="false">
+      <span class="marca" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </span>
+      <span class="txt">${t}</span>
+    </button>
+  </li>`).join('');
+
+$('#lista').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const on = btn.getAttribute('aria-pressed') === 'true';
+  btn.setAttribute('aria-pressed', String(!on));
+});
+
+/* ---------- Vales ---------- */
+$('#vales').innerHTML = VALES.map(v => `
+  <article class="vale">
+    <div class="vale__txt">
+      <small>Vale</small>
+      <h4>${v}</h4>
+    </div>
+    <button class="vale__btn" type="button">Canjear</button>
+    <span class="vale__sello" aria-hidden="true">Canjeado</span>
+  </article>`).join('');
+
+$('#vales').addEventListener('click', (e) => {
+  const btn = e.target.closest('.vale__btn');
+  if (!btn) return;
+  btn.closest('.vale').classList.add('usado');
+});
+
+/* ---------- Contadores ---------- */
+(function contador() {
+  const grande = $('#contadorGrande');
+  const reloj = $('#contadorReloj');
+  const junto = $('#contadorJuntos');
+  const relojJuntos = $('#relojJuntos');
+  const total = $('#totalJuntos');
+
+  if (!FECHA_INICIO) {
+    grande.textContent = 'Cada día contigo';
+    reloj.remove();
+    return;
+  }
+
+  const inicio = new Date(FECHA_INICIO);
+  if (isNaN(inicio.getTime())) {
+    grande.textContent = 'Cada día contigo';
+    reloj.remove();
+    return;
+  }
+
+  const relacion = FECHA_RELACION ? new Date(FECHA_RELACION + 'T00:00:00') : null;
+
+  const plural = (n, uno, varios) => n === 1 ? `${n} ${uno}` : `${n} ${varios}`;
+
+  function desglose(desde, hasta) {
+    let y = hasta.getFullYear() - desde.getFullYear();
+    let m = hasta.getMonth() - desde.getMonth();
+    let d = hasta.getDate() - desde.getDate();
+    if (d < 0) {
+      const diasMesAnterior = new Date(hasta.getFullYear(), hasta.getMonth(), 0).getDate();
+      d += diasMesAnterior;
+      m--;
+    }
+    if (m < 0) { m += 12; y--; }
+    return { y, m, d };
+  }
+
+  function textoDesde(desde, hasta) {
+    const { y, m, d } = desglose(desde, hasta);
+    const partes = [];
+    if (y > 0) partes.push(plural(y, 'año', 'años'));
+    if (m > 0) partes.push(plural(m, 'mes', 'meses'));
+    partes.push(plural(d, 'día', 'días'));
+    return partes.length === 1 ? partes[0] : partes.slice(0, -1).join(', ') + ' y ' + partes.slice(-1);
+  }
+
+  function pintar() {
+    const ahora = new Date();
+
+    grande.textContent = textoDesde(inicio, ahora);
+
+    if (junto && relacion && !isNaN(relacion.getTime())) {
+      junto.textContent = textoDesde(relacion, ahora);
+      const dias = Math.max(0, Math.floor((ahora - relacion) / 86400000));
+      if (total) total.textContent = `${dias.toLocaleString('es')} días juntos`;
+    }
+
+    const hh = String(ahora.getHours()).padStart(2, '0');
+    const mm = String(ahora.getMinutes()).padStart(2, '0');
+    const ss = String(ahora.getSeconds()).padStart(2, '0');
+    const hora = `${hh}h ${mm}m ${ss}s <span>· y contando</span>`;
+    reloj.innerHTML = hora;
+    if (relojJuntos) relojJuntos.innerHTML = hora;
+  }
+
+  pintar();
+  setInterval(pintar, 1000);
+})();
+
+/* ---------- Cuenta regresiva a la graduación ---------- */
+(function cuentaGraduacion() {
+  const num = $('#cuentaNum');
+  const label = $('#cuentaLabel');
+  const reloj = $('#relojAtardecer');
+  const objetivo = new Date(FECHA_GRADUACION);
+  if (!num || !label || !reloj || isNaN(objetivo.getTime())) return;
+
+  const tarjetas = Array.from(document.querySelectorAll('.atardecer'));
+
+  function diasHasta() {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const meta = new Date(objetivo);
+    meta.setHours(0, 0, 0, 0);
+    return Math.round((meta - hoy) / 86400000);
+  }
+
+  function pintar() {
+    const ahora = new Date();
+    const dias = diasHasta();
+
+    if (dias > 0) {
+      num.textContent = Math.min(7, dias);
+      num.classList.remove('cuenta__num--hoy');
+      label.textContent = 'atardeceres para tu graduación';
+    } else if (dias === 0) {
+      num.textContent = 'HOY';
+      num.classList.add('cuenta__num--hoy');
+      label.textContent = 'es tu graduación';
+    } else {
+      num.textContent = '0';
+      num.classList.remove('cuenta__num--hoy');
+      label.textContent = 'ya te graduaste';
+    }
+
+    const falta = Math.max(0, objetivo - ahora);
+    if (falta > 0) {
+      const d = Math.floor(falta / 86400000);
+      const h = Math.floor(falta / 3600000) % 24;
+      const m = Math.floor(falta / 60000) % 60;
+      const s = Math.floor(falta / 1000) % 60;
+      const prefijo = d > 0 ? `${d}d ` : '';
+      reloj.innerHTML = `Faltan <b>${prefijo}${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s</b> para tu graduación`;
+    } else {
+      reloj.innerHTML = 'La graduación ya llegó <b>🎓</b>';
+    }
+
+    tarjetas.forEach((card) => {
+      const n = Number(card.dataset.dia);
+      const esHoy = (dias >= 1 && dias <= 7 && n === dias) || (dias === 0 && n === 1);
+      card.classList.toggle('atardecer--hoy', esHoy);
+
+      const badge = card.querySelector('.atardecer__badge');
+      if (!badge) return;
+      if (esHoy) {
+        badge.hidden = false;
+        badge.textContent = 'HOY';
+      } else if (n === 1) {
+        badge.hidden = false;
+        badge.textContent = '27 NOV';
+      } else {
+        badge.hidden = true;
+        badge.textContent = '';
+      }
+    });
+  }
+
+  pintar();
+  setInterval(pintar, 1000);
+})();
+
+/* ---------- Fondo ---------- */
+(function fondo() {
+  if (reduceMotion) return;
+  const cont = $('#fondo');
+  const iconos = [
+    `<svg viewBox="0 0 64 64" fill="currentColor"><path d="M32 41c-6.6 0-12-5.4-12-12V15.5c0-2.2 2.6-3.2 4.1-1.5L32 22l7.9-8c1.5-1.7 4.1-.7 4.1 1.5V29c0 6.6-5.4 12-12 12Z"/><path d="M32 40v14" stroke="#7fae74" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M32 54c-6.4-1.6-9.6-6-9.6-11.2 5.7 0 9.6 4.3 9.6 11.2Z" fill="#7fae74"/></svg>`,
+    `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`,
+    `<svg viewBox="0 0 64 64" fill="currentColor"><path d="M32 41c-6.6 0-12-5.4-12-12V15.5c0-2.2 2.6-3.2 4.1-1.5L32 22l7.9-8c1.5-1.7 4.1-.7 4.1 1.5V29c0 6.6-5.4 12-12 12Z"/><path d="M32 40v14" stroke="#7fae74" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M32 54c-6.4-1.6-9.6-6-9.6-11.2 5.7 0 9.6 4.3 9.6 11.2Z" fill="#7fae74"/></svg>`,
+    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20.5S4 16 4 10a4 4 0 0 1 8-1 4 4 0 0 1 8 1c0 6-8 10.5-8 10.5Z"/></svg>`,
+    `<svg viewBox="0 0 64 64" fill="currentColor"><path d="M32 41c-6.6 0-12-5.4-12-12V15.5c0-2.2 2.6-3.2 4.1-1.5L32 22l7.9-8c1.5-1.7 4.1-.7 4.1 1.5V29c0 6.6-5.4 12-12 12Z"/><path d="M32 40v14" stroke="#7fae74" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M32 54c-6.4-1.6-9.6-6-9.6-11.2 5.7 0 9.6 4.3 9.6 11.2Z" fill="#7fae74"/></svg>`
+  ];
+  const colores = [
+    'rgba(232,193,95,.8)',
+    'rgba(232,193,95,.45)',
+    'rgba(244,221,162,.55)',
+    'rgba(216,150,150,.42)',
+    'rgba(201,208,234,.3)'
+  ];
+
+  const total = window.innerWidth < 640 ? 14 : 22;
+
+  for (let i = 0; i < total; i++) {
+    const el = document.createElement('div');
+    el.className = 'flotante';
+    const tam = 10 + Math.random() * 22;
+    const dur = 18 + Math.random() * 18;
+    el.style.left = (Math.random() * 96) + '%';
+    el.style.width = tam + 'px';
+    el.style.color = colores[Math.floor(Math.random() * colores.length)];
+    el.style.animationDuration = dur + 's';
+    el.style.animationDelay = -(Math.random() * dur) + 's';
+    el.style.setProperty('--deriva', (Math.random() * 120 - 60) + 'px');
+    el.style.setProperty('--giro', (Math.random() * 90 - 45) + 'deg');
+    el.innerHTML = iconos[Math.floor(Math.random() * iconos.length)];
+    cont.appendChild(el);
+  }
+})();
+
+/* ---------- Jardines de tulipanes ---------- */
+function soltarHojas(el) {
+  if (reduceMotion) return;
+  const capa = $('#burst');
+  if (!capa) return;
+
+  const caja = el.getBoundingClientRect();
+  const cx = caja.left + caja.width / 2;
+  const cy = caja.top + caja.height * 0.22;
+  const cols = ['#6f9f6a', '#7fae74', '#5c8b58', '#e8c15f', '#d99a8a'];
+
+  el.animate([
+    { transform: 'rotate(0deg)' },
+    { transform: 'rotate(-5deg)' },
+    { transform: 'rotate(4deg)' },
+    { transform: 'rotate(0deg)' }
+  ], { duration: 480, easing: 'ease-in-out' });
+
+  for (let i = 0; i < 10; i++) {
+    const h = document.createElement('div');
+    h.className = 'burst__petalo';
+    const size = 10 + Math.random() * 9;
+    h.style.left = (cx + (Math.random() * 30 - 15)) + 'px';
+    h.style.top = (cy + (Math.random() * 22 - 11)) + 'px';
+    h.style.width = size + 'px';
+    h.style.height = (size * 1.35) + 'px';
+    h.style.color = cols[i % cols.length];
+    h.innerHTML = (i % 3 === 0) ? petaloSVG : hojaSVG;
+    capa.appendChild(h);
+
+    const dx = Math.random() * 130 - 65;
+    const dy = 80 + Math.random() * 130;
+    const rot = Math.random() * 540 - 270;
+    const dur = 1100 + Math.random() * 900;
+
+    const anim = h.animate([
+      { transform: 'translate(-50%,-50%) rotate(0deg)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rot}deg)`, opacity: 0 }
+    ], { duration: dur, easing: 'cubic-bezier(.3,.2,.4,1)', fill: 'forwards' });
+
+    anim.onfinish = () => h.remove();
+  }
+}
+
+function crearJardin(cont, datos) {
+  datos.forEach((t) => {
+    const el = document.createElement('div');
+    el.className = 'jardin__tulipan';
+    el.style.left = t.x + '%';
+    el.style.setProperty('--alto', t.h + 'px');
+    el.style.color = t.c;
+    el.style.animationDelay = '-' + t.d + 's';
+    el.style.animationDuration = (5.4 + Math.random() * 2.2).toFixed(2) + 's';
+    el.style.opacity = (0.5 + Math.random() * 0.35).toFixed(2);
+    el.innerHTML = tulipanSVG;
+    el.addEventListener('click', () => soltarHojas(el));
+    cont.appendChild(el);
+  });
+}
+
+(function jardines() {
+  if (reduceMotion) return;
+
+  const portada = $('#jardin');
+  if (portada) {
+    crearJardin(portada, [
+      { x: -1,   h: 112, c: '#e8c15f', d: 0    },
+      { x: 4.5,  h: 150, c: '#f4dda2', d: 1.2  },
+      { x: 10,   h: 92,  c: '#d99a8a', d: 2.4  },
+      { x: 15.5, h: 138, c: '#c9a24a', d: 0.7  },
+      { x: 21,   h: 104, c: '#f4dda2', d: 1.9  },
+      { x: 26.5, h: 158, c: '#e8c15f', d: 2.8  },
+      { x: 32.5, h: 78,  c: '#d99a8a', d: 1.5  },
+      { x: 38,   h: 70,  c: '#f4dda2', d: 0.9  },
+      { x: 60,   h: 76,  c: '#d99a8a', d: 2.3  },
+      { x: 67.5, h: 86,  c: '#c9a24a', d: 0.5  },
+      { x: 73.5, h: 142, c: '#e8c15f', d: 1.6  },
+      { x: 79,   h: 100, c: '#c9a24a', d: 0.4  },
+      { x: 84.5, h: 154, c: '#f4dda2', d: 2.2  },
+      { x: 90,   h: 110, c: '#d99a8a', d: 1.1  },
+      { x: 95.5, h: 146, c: '#e8c15f', d: 2.6  },
+      { x: 101,  h: 120, c: '#c9a24a', d: 0.2  }
+    ]);
+  }
+
+  const final = $('#jardinFinal');
+  if (final) {
+    crearJardin(final, [
+      { x: 1,  h: 104, c: '#e8c15f', d: 0.3 },
+      { x: 11, h: 132, c: '#f4dda2', d: 1.4 },
+      { x: 22, h: 88,  c: '#d99a8a', d: 2.1 },
+      { x: 34, h: 142, c: '#c9a24a', d: 0.8 },
+      { x: 46, h: 96,  c: '#f4dda2', d: 2.6 },
+      { x: 58, h: 148, c: '#e8c15f', d: 1.1 },
+      { x: 70, h: 92,  c: '#d99a8a', d: 0.5 },
+      { x: 81, h: 126, c: '#f4dda2', d: 1.8 },
+      { x: 92, h: 108, c: '#c9a24a', d: 0.9 }
+    ]);
+  }
+})();
+
+/* ---------- Pétalos cayendo ---------- */
+(function petalosCayendo() {
+  if (reduceMotion) return;
+  const cont = $('#petalos');
+  if (!cont) return;
+
+  const cols = ['#e8c15f', '#f4dda2', '#d99a8a', '#c9a24a', '#f4dda2'];
+  const total = window.innerWidth < 640 ? 11 : 18;
+
+  for (let i = 0; i < total; i++) {
+    const el = document.createElement('div');
+    el.className = 'petalo-cae';
+
+    const w = 8 + Math.random() * 9;
+    el.style.left = (Math.random() * 100) + '%';
+    el.style.width = w + 'px';
+    el.style.height = (w * 1.32) + 'px';
+    el.style.color = cols[i % cols.length];
+    el.style.setProperty('--deriva2', (Math.random() * 90 - 45) + 'px');
+    el.style.animationDuration = (12 + Math.random() * 14) + 's';
+    el.style.animationDelay = -(Math.random() * 26) + 's';
+    el.innerHTML = petaloSVG;
+
+    cont.appendChild(el);
+  }
+})();
+
+/* ---------- Explosión de pétalos al abrir ---------- */
+function explotarPetalos(x, y) {
+  if (reduceMotion) return;
+  const capa = $('#burst');
+  if (!capa) return;
+
+  const cols = ['#e8c15f', '#d99a8a', '#c9a24a', '#f4dda2', '#f7e6c0'];
+  const total = 32;
+
+  for (let i = 0; i < total; i++) {
+    const p = document.createElement('div');
+    p.className = 'burst__petalo';
+    const size = 14 + Math.random() * 12;
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    p.style.width = size + 'px';
+    p.style.height = (size * 1.32) + 'px';
+    p.style.color = cols[i % cols.length];
+    p.innerHTML = petaloSVG;
+    capa.appendChild(p);
+
+    const ang = (Math.PI * 2 * i) / total + (Math.random() * 0.6 - 0.3);
+    const dist = 80 + Math.random() * 250;
+    const dx = Math.cos(ang) * dist;
+    const dy = Math.sin(ang) * dist * 0.9 + 40;
+    const rot = Math.random() * 720 - 360;
+    const esc = 0.6 + Math.random() * 0.55;
+    const dur = 1000 + Math.random() * 800;
+
+    const anim = p.animate([
+      { transform: 'translate(-50%,-50%) rotate(0deg) scale(.35)', opacity: 1, offset: 0 },
+      { transform: `translate(calc(-50% + ${dx * .65}px), calc(-50% + ${dy * .5}px)) rotate(${rot * .55}deg) scale(${esc})`, opacity: 1, offset: .55 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rot}deg) scale(${esc})`, opacity: 0, offset: 1 }
+    ], { duration: dur, easing: 'cubic-bezier(.16,.7,.3,1)', fill: 'forwards' });
+
+    anim.onfinish = () => p.remove();
+  }
+}
+
+/* ---------- Bus en movimiento ---------- */
+(function busViaje() {
+  if (reduceMotion) return;
+  const bus = document.getElementById('busViaje');
+  const ruta = document.getElementById('rutaBus');
+  if (!bus || !ruta || !ruta.getTotalLength) return;
+
+  const largo = ruta.getTotalLength();
+  const duracion = 15000;
+
+  function frame(now) {
+    const fase = (now % duracion) / duracion;
+    const avance = fase < .5 ? fase * 2 : (1 - fase) * 2;
+    const dir = fase < .5 ? 1 : -1;
+    const d = avance * largo;
+    const p = ruta.getPointAtLength(d);
+    const p2 = ruta.getPointAtLength(Math.min(largo, Math.max(0, d + 8 * dir)));
+    const ang = Math.atan2(p2.y - p.y, p2.x - p.x) * 180 / Math.PI;
+    const salto = Math.sin(now / 220) * 1.1;
+    bus.setAttribute('transform', `translate(${p.x} ${p.y + salto}) rotate(${ang})`);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ---------- Abrir el regalo ---------- */
+const sobre = $('#sobre');
+const botonAbrir = $('#abrir');
+let bloqueado = false;
+
+function abrir() {
+  if (bloqueado || document.body.classList.contains('abierto')) return;
+  bloqueado = true;
+
+  const caja = sobre.getBoundingClientRect();
+  explotarPetalos(caja.left + caja.width / 2, caja.top + caja.height * 0.42);
+
+  document.body.classList.add('abriendo');
+  botonAbrir.textContent = 'Abriendo…';
+
+  setTimeout(() => {
+    document.body.classList.add('abierto');
+    document.body.classList.remove('abriendo');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    iniciarRevelado();
+    setTimeout(iniciarMapa, 400);
+    $('#sitio').focus?.({ preventScroll: true });
+    bloqueado = false;
+  }, reduceMotion ? 100 : 980);
+}
+
+function volverAlInicio() {
+  document.body.classList.remove('abierto');
+  botonAbrir.textContent = 'Toca para abrir';
+  window.scrollTo({ top: 0, behavior: 'auto' });
+  sobre.focus({ preventScroll: true });
+}
+
+botonAbrir.addEventListener('click', abrir);
+sobre.addEventListener('click', abrir);
+sobre.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); }
+});
+$('#volver').addEventListener('click', volverAlInicio);
+
+/* ---------- Aparición al hacer scroll ---------- */
+let observador = null;
+function iniciarRevelado() {
+  if (reduceMotion) {
+    document.querySelectorAll('.revelar').forEach(el => el.classList.add('visible'));
+    return;
+  }
+  if (!observador) {
+    observador = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (en.isIntersecting) {
+          en.target.classList.add('visible');
+          observador.unobserve(en.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: .08 });
+  }
+  document.querySelectorAll('.revelar:not(.visible)').forEach(el => observador.observe(el));
+}
+
+/* ---------- Modal de la carta ---------- */
+const modal = $('#modalCarta');
+const btnAbrirCarta = $('#abrirCarta');
+let ultimoFoco = null;
+
+function abrirCarta() {
+  ultimoFoco = document.activeElement;
+  modal.classList.add('abierto');
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  modal.querySelector('.carta-cerrar').focus({ preventScroll: true });
+}
+
+function cerrarCarta() {
+  modal.classList.remove('abierto');
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  if (ultimoFoco) ultimoFoco.focus({ preventScroll: true });
+}
+
+btnAbrirCarta.addEventListener('click', abrirCarta);
+modal.querySelectorAll('[data-cerrar-carta]').forEach(el => el.addEventListener('click', cerrarCarta));
+
+/* ---------- Paradas: mapa y fotos ---------- */
+const modalLugar = $('#modalLugar');
+let focoParada = null;
+let mapaParadas = null;
+
+function iniciarMapa() {
+  const cont = document.getElementById('mapaParadas');
+  if (!cont) return;
+  if (mapaParadas) { mapaParadas.invalidateSize(); return; }
+
+  if (!window.L) {
+    cont.classList.add('mapa-paradas--fallo');
+    cont.innerHTML = '<span>No se pudo cargar el mapa.</span><a href="https://www.google.com/maps/search/?api=1&query=Centro+C%C3%ADvico%2C+Tegucigalpa%2C+Honduras" target="_blank" rel="noopener">Abrir en Google Maps</a>';
+    return;
+  }
+
+  mapaParadas = L.map(cont, {
+    scrollWheelZoom: false,
+    zoomControl: true,
+    attributionControl: true
+  }).setView([14.0815, -87.2005], 13);
+
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19,
+    attribution: 'Imagery &copy; <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a>, Maxar, Earthstar Geographics'
+  }).addTo(mapaParadas);
+
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19
+  }).addTo(mapaParadas);
+
+  PARADAS.forEach((p, i) => {
+    const icono = L.divIcon({
+      className: 'pin-mapa',
+      html: `<span class="pin-mapa__cuerpo">${String(i + 1).padStart(2, '0')}</span>`,
+      iconSize: [38, 38],
+      iconAnchor: [19, 19]
+    });
+
+    const marcador = L.marker([p.lat, p.lng], {
+      icon: icono,
+      title: p.nombre,
+      alt: p.nombre
+    }).addTo(mapaParadas);
+
+    marcador.bindTooltip(p.nombre, {
+      permanent: true,
+      direction: 'top',
+      offset: [0, -20],
+      className: 'etiqueta-mapa',
+      opacity: 1
+    });
+
+    marcador.on('click', () => abrirLugar(p.id));
+  });
+
+  const limites = L.latLngBounds(PARADAS.map(p => [p.lat, p.lng]));
+  mapaParadas.fitBounds(limites, { padding: [36, 36], maxZoom: 14 });
+  setTimeout(() => mapaParadas.invalidateSize(), 350);
+}
+
+function abrirLugar(id) {
+  const p = PARADAS.find(x => x.id === id);
+  if (!p) return;
+  focoParada = document.activeElement;
+
+  document.querySelectorAll('.parada').forEach(b => {
+    b.classList.toggle('activa', b.dataset.parada === id);
+  });
+
+  if (!mapaParadas) iniciarMapa();
+  if (mapaParadas) {
+    mapaParadas.flyTo([p.lat, p.lng], Math.max(mapaParadas.getZoom() || 14, 15), { duration: 1 });
+  }
+
+  const enlaceMapa = $('#enlaceMapa');
+  if (enlaceMapa) {
+    enlaceMapa.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.mapa)}`;
+  }
+
+  $('#tituloLugar').textContent = p.nombre;
+  $('#fechaLugar').textContent = p.fecha;
+  $('#lugarFotos').innerHTML = p.fotos.map(f =>
+    `<figure><img src="${f.src}" alt="${f.alt}" loading="lazy"></figure>`
+  ).join('');
+
+  modalLugar.classList.add('abierto');
+  modalLugar.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  modalLugar.querySelector('.carta-cerrar').focus({ preventScroll: true });
+}
+
+function cerrarLugar() {
+  modalLugar.classList.remove('abierto');
+  modalLugar.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = (visor.classList.contains('abierto') || modal.classList.contains('abierto')) ? 'hidden' : '';
+  if (focoParada) focoParada.focus({ preventScroll: true });
+}
+
+document.querySelectorAll('.parada').forEach(btn => {
+  btn.addEventListener('click', () => abrirLugar(btn.dataset.parada));
+});
+const primeraParada = document.querySelector('.parada');
+if (primeraParada) primeraParada.classList.add('activa');
+modalLugar.querySelectorAll('[data-cerrar-lugar]').forEach(el => el.addEventListener('click', cerrarLugar));
+
+modalLugar.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  const foco = modalLugar.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])');
+  if (!foco.length) return;
+  const primero = foco[0], ultimo = foco[foco.length - 1];
+  if (e.shiftKey && document.activeElement === primero) { e.preventDefault(); ultimo.focus(); }
+  else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primero.focus(); }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (visor.classList.contains('abierto')) { cerrarVisor(); return; }
+  if (modalLugar.classList.contains('abierto')) { cerrarLugar(); return; }
+  if (modal.classList.contains('abierto')) cerrarCarta();
+});
+
+/* Atrapa el foco dentro del modal */
+modal.addEventListener('keydown', (e) => {
+  if (e.key !== 'Tab') return;
+  const foco = modal.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])');
+  if (!foco.length) return;
+  const primero = foco[0], ultimo = foco[foco.length - 1];
+  if (e.shiftKey && document.activeElement === primero) { e.preventDefault(); ultimo.focus(); }
+  else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primero.focus(); }
+});
+
+/* ---------- Carta escrita a mano (visor) ---------- */
+const visor = $('#visorCarta');
+const verCarta = $('#verCarta');
+const visorImg = visor.querySelector('img');
+const btnCerrarVisor = $('#cerrarVisor');
+let focoVisor = null;
+
+function abrirVisor() {
+  focoVisor = document.activeElement;
+  visor.classList.add('abierto');
+  visor.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  visor.scrollTop = 0;
+  btnCerrarVisor.focus({ preventScroll: true });
+}
+
+function cerrarVisor() {
+  visor.classList.remove('abierto');
+  visor.setAttribute('aria-hidden', 'true');
+  visorImg.classList.remove('zoom');
+  document.body.style.overflow = modal.classList.contains('abierto') ? 'hidden' : '';
+  if (focoVisor) focoVisor.focus({ preventScroll: true });
+}
+
+verCarta.addEventListener('click', abrirVisor);
+btnCerrarVisor.addEventListener('click', cerrarVisor);
+visor.addEventListener('click', (e) => { if (e.target === visor) cerrarVisor(); });
+visorImg.addEventListener('click', () => visorImg.classList.toggle('zoom'));
+
+/* ---------- Ruleta ---------- */
+(function ruleta() {
+  const disco = $('#ruleta');
+  const boton = $('#girar');
+  const salida = $('#resultadoRuleta');
+  const n = RULETA.length;
+  const paso = 360 / n;
+  let girando = false;
+  let rotacion = 0;
+
+  disco.innerHTML = RULETA.map((t, i) => {
+    const ang = i * paso + paso / 2;
+    return `<div class="ruleta__et" style="transform:rotate(${ang}deg) translateY(-${100}px)"><span style="transform:rotate(${-ang}deg)">${t}</span></div>`;
+  }).join('');
+
+  boton.addEventListener('click', () => {
+    if (girando) return;
+    girando = true;
+    boton.disabled = true;
+    salida.style.opacity = '0';
+
+    const i = Math.floor(Math.random() * n);
+    const centro = i * paso + paso / 2;
+    const jitter = (Math.random() - .5) * (paso * .5);
+    const vueltas = 5 + Math.floor(Math.random() * 3);
+    const destino = 360 * vueltas + (360 - centro + jitter);
+    rotacion += destino;
+
+    disco.style.transform = `rotate(${rotacion}deg)`;
+
+    // El segmento que queda bajo la aguja sale de la rotación final,
+    // así el resultado siempre coincide con lo que se ve.
+    const norm = ((rotacion % 360) + 360) % 360;
+    const original = (360 - norm) % 360;
+    const elegido = Math.floor(original / paso) % n;
+
+    setTimeout(() => {
+      girando = false;
+      boton.disabled = false;
+      salida.innerHTML = `¡Es una cita! <strong style="color:#f4dda2">${RULETA[elegido]}</strong> 😌`;
+      salida.style.opacity = '1';
+    }, reduceMotion ? 150 : 4100);
+  });
+})();
+
+/* ---------- Música suave (Web Audio, sin archivos) ---------- */
+(function musica() {
+  const btn = $('#musica');
+  let ctx = null, master = null, loop = null, encendida = false;
+
+  const melodia = [392.0, 523.25, 659.25, 523.25, 587.33, 493.88, 392.0, 329.63];
+  const bajo = [130.81, 164.81, 146.83, 196.0];
+
+  function nota(freq, t, dur, vol) {
+    const osc = ctx.createOscillator();
+    const gan = ctx.createGain();
+    const filtro = ctx.createBiquadFilter();
+
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    filtro.type = 'lowpass';
+    filtro.frequency.value = 2200;
+
+    gan.gain.setValueAtTime(0, t);
+    gan.gain.linearRampToValueAtTime(vol, t + 0.03);
+    gan.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    osc.connect(filtro).connect(gan).connect(master);
+    osc.start(t);
+    osc.stop(t + dur + 0.05);
+  }
+
+  function compas() {
+    if (!encendida || !ctx) return;
+    const t = ctx.currentTime + 0.05;
+    const paso = 0.62;
+    melodia.forEach((f, i) => nota(f, t + i * paso, 1.5, 0.055));
+    nota(bajo[Math.floor(Math.random() * bajo.length)], t, 2.4, 0.035);
+  }
+
+  async function encender() {
+    if (!ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      ctx = new AudioCtx();
+      master = ctx.createGain();
+      master.gain.value = 0.9;
+      master.connect(ctx.destination);
+    }
+    if (ctx.state === 'suspended') await ctx.resume();
+
+    encendida = true;
+    btn.setAttribute('aria-pressed', 'true');
+    btn.setAttribute('aria-label', 'Apagar música');
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+    master.gain.linearRampToValueAtTime(0.9, ctx.currentTime + 0.6);
+    compas();
+    loop = setInterval(compas, 5000);
+  }
+
+  function apagar() {
+    encendida = false;
+    btn.setAttribute('aria-pressed', 'false');
+    btn.setAttribute('aria-label', 'Encender música suave');
+    clearInterval(loop);
+    if (ctx && master) {
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
+    }
+  }
+
+  btn.addEventListener('click', () => encendida ? apagar() : encender());
+})();
+</script>
+</body>
+</html>
