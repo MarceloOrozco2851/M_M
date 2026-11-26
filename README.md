@@ -1,6 +1,6 @@
 # Marcelo & Melida · Nuestra historia
 
-Página de regalo con la estética de la referencia (azul noche + dorado): portada con sobre, nombres, fotos con marco blanco, contador en vivo, mensaje privado con **carta escrita a mano**, línea del tiempo real, mapa de la distancia, galería, lista, vales y ruleta.
+Página de regalo con la estética de la referencia (azul noche + dorado): portada con sobre, nombres, fotos con marco blanco, contadores en vivo (incluido el tiempo desde la última vez que se vieron), mensaje privado con **carta escrita a mano**, línea del tiempo real, mapa de la distancia, galería, lista, vales y ruleta.
 
 ## Cómo verla
 
@@ -14,6 +14,7 @@ Abre `index.html` con doble clic. Funciona sin servidor; las fotos están en `fo
    - Foto de su cumpleaños en Metro Mall.
    - **Tiempo de conocernos (primer saludo):** fecha 27/11/2024 · 22:13, contador y reloj en vivo.
    - **Tiempo de estar juntos (la pregunta):** fecha 14/07/2026, contador, reloj en vivo y total de días juntos.
+   - **Tiempo sin verte (la última vez que nos vimos):** fecha 5/9/2026, contador, reloj en vivo y total de días sin verse.
    - “Mensaje privado → Abrir carta”: la carta escrita, la firma y **la carta a mano del PDF** (se puede ampliar).
    - Foto del primer encuentro (Centro Cívico).
    - “Lo que más amo de ti”.
@@ -36,6 +37,7 @@ const ELLA = 'Melida';
 const EL   = 'Marcelo';
 const FECHA_INICIO  = '2024-11-27T22:13:00';  // primer saludo (contador principal)
 const FECHA_RELACION = '2026-07-14';          // inicio de la relación (línea de abajo)
+const FECHA_ULTIMA_VEZ = '2026-09-05T00:00:00'; // última vez que se vieron (tiempo sin verte)
 
 const GUSTOS = [ ... ];
 const MOMENTOS = [ { fecha, titulo, texto }, ... ];
@@ -51,7 +53,7 @@ Están en `fotos/` ya optimizadas (JPEG). Para cambiar una, reemplaza el archivo
 
 | Archivo | Contenido |
 |---|---|
-| `carta-mano.jpg` | Carta escrita a mano (desde el PDF `ELISAAA.pdf`) |
+| `carta-mano.jpg` | Carta escrita a mano (desde el PDF `MELIDA.pdf`) |
 | `centro-civico-1.jpg` | Plaza del Centro Cívico |
 | `centro-civico-2.jpg` | Vista de la plaza desde arriba |
 | `centro-civico-3.jpg` | Bebidas y McDonald's (primer encuentro) |
@@ -62,7 +64,7 @@ Están en `fotos/` ya optimizadas (JPEG). Para cambiar una, reemplaza el archivo
 | `metro-mall-2.jpg` | Caminando por Metro Mall |
 | `metro-mall-3.jpg` | Comida en Metro Mall |
 
-**Carta a mano:** viene de `ELISAAA.pdf` (1 página escaneada). Se recortó, se convirtió a JPEG y se agregó al modal de “Abrir carta”, debajo del texto. Al tocarla se abre en un visor a pantalla completa y se puede acercar tocando la imagen.
+**Carta a mano:** viene de `MELIDA.pdf` (1 página escaneada). Se recortó, se convirtió a JPEG y se agregó al modal de “Abrir carta”, debajo del texto. Al tocarla se abre en un visor a pantalla completa y se puede acercar tocando la imagen.
 
 **Nota de privacidad:** el boleto de bus no se publicó porque muestra el número de pasaporte y el código QR. El regreso se cuenta en texto, sin publicar el documento.
 

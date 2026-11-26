@@ -1437,6 +1437,21 @@
       <p class="contador__reloj" id="relojJuntos" aria-live="off">00h 00m 00s</p>
       <p class="contador__total" id="totalJuntos">…</p>
     </div>
+
+    <div class="contador-sep" aria-hidden="true">
+      <span></span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      <span></span>
+    </div>
+
+    <div class="contador-bloque">
+      <p class="etiqueta">Tiempo sin verte</p>
+      <p class="contador__nota">( la última vez que nos vimos )</p>
+      <p class="contador__fecha">5 de septiembre de 2026</p>
+      <p class="contador__grande" id="contadorSinVer">Calculando…</p>
+      <p class="contador__reloj" id="relojSinVer" aria-live="off">00h 00m 00s</p>
+      <p class="contador__total" id="totalSinVer">…</p>
+    </div>
   </section>
 
   <section class="panel revelar">
@@ -1650,6 +1665,9 @@ const FECHA_INICIO = '2024-11-27T22:13:00';
 // Inicio de la relación: se muestra en la línea de abajo del contador.
 const FECHA_RELACION = '2026-07-14';
 
+// Última vez que nos vimos: desde aquí se cuenta el contador "Tiempo sin verte".
+const FECHA_ULTIMA_VEZ = '2026-09-05T00:00:00';
+
 const GUSTOS = [
   'Tu risa cuando algo te da un poco de pena.',
   'Cómo cuidas a la gente que quieres, sin que nadie te lo pida.',
@@ -1797,6 +1815,9 @@ $('#vales').addEventListener('click', (e) => {
   const junto = $('#contadorJuntos');
   const relojJuntos = $('#relojJuntos');
   const total = $('#totalJuntos');
+  const sinVer = $('#contadorSinVer');
+  const relojSinVer = $('#relojSinVer');
+  const totalSinVer = $('#totalSinVer');
 
   if (!FECHA_INICIO) {
     grande.textContent = 'Cada día contigo';
@@ -1812,6 +1833,7 @@ $('#vales').addEventListener('click', (e) => {
   }
 
   const relacion = FECHA_RELACION ? new Date(FECHA_RELACION + 'T00:00:00') : null;
+  const ultimaVez = FECHA_ULTIMA_VEZ ? new Date(FECHA_ULTIMA_VEZ) : null;
 
   const plural = (n, uno, varios) => n === 1 ? `${n} ${uno}` : `${n} ${varios}`;
 
@@ -1848,12 +1870,19 @@ $('#vales').addEventListener('click', (e) => {
       if (total) total.textContent = `${dias.toLocaleString('es')} días juntos`;
     }
 
+    if (sinVer && ultimaVez && !isNaN(ultimaVez.getTime())) {
+      sinVer.textContent = textoDesde(ultimaVez, ahora);
+      const diasSinVer = Math.max(0, Math.floor((ahora - ultimaVez) / 86400000));
+      if (totalSinVer) totalSinVer.textContent = `${diasSinVer.toLocaleString('es')} días sin verte`;
+    }
+
     const hh = String(ahora.getHours()).padStart(2, '0');
     const mm = String(ahora.getMinutes()).padStart(2, '0');
     const ss = String(ahora.getSeconds()).padStart(2, '0');
     const hora = `${hh}h ${mm}m ${ss}s <span>· y contando</span>`;
     reloj.innerHTML = hora;
     if (relojJuntos) relojJuntos.innerHTML = hora;
+    if (relojSinVer) relojSinVer.innerHTML = hora;
   }
 
   pintar();
