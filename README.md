@@ -26,6 +26,7 @@ Abre `index.html` con doble clic. Funciona sin servidor; las fotos están en `fo
    - “Nuestra lista” (checklist interactiva).
    - “Nuestros vales de amor” (se pueden canjear).
    - Ruleta de citas.
+   - **Sobre los atardeceres:** enlace a la página de los siete atardeceres para la graduación.
    - Cierre + firma.
 
 ## Personalizar
