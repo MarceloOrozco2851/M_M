@@ -137,8 +137,10 @@
   .jardin--final{
     position:relative;
     left:auto; right:auto; bottom:auto;
+    width:100vw;
+    max-width:100vw;
     height:175px;
-    margin:0 0 -6px;
+    margin:0 calc(50% - 50vw) -6px;
     overflow:hidden;
   }
   @keyframes sway{
@@ -1139,6 +1141,14 @@
     text-transform:uppercase;
     color:#c9a86a;
   }
+  .dedicatoria__nota{
+    display:block;
+    margin-top:5px;
+    font-family:var(--sans);
+    font-size:.58rem;
+    letter-spacing:.08em;
+    color:#8a90ab;
+  }
   .pie{
     display:flex; align-items:center; justify-content:center; gap:9px;
     margin-top:10px; padding-bottom:8px;
@@ -1671,7 +1681,8 @@
 
   <section class="dedicatoria revelar">
     <p>Melida, felicidades.<br>Que nunca te falte valentía<br>para perseguir lo que amas;<br>todo lo que te propongas,<br>lo puedes lograr.</p>
-    <span class="dedicatoria__firma">Eberth (Gaby)</span>
+    <span class="dedicatoria__firma">Gabriel (Gaby)</span>
+    <span class="dedicatoria__nota">Amigo de Marcelo y cuñado suyo</span>
   </section>
 
   <footer class="pie">
@@ -2112,6 +2123,12 @@ function crearJardin(cont, datos) {
       { x: 76.25, h: 90, c: '#f4dda2', d: 2.7  },
       { x: 87.25, h: 136, c: '#c9a24a', d: 1.5 },
       { x: 98.25, h: 98, c: '#e8c15f', d: 0.8  },
+      /* centro (para que la fila quede completa) */
+      { x: 39.5, h: 98,  c: '#e8c15f', d: 1.25 },
+      { x: 44,   h: 124, c: '#f4dda2', d: 2.35 },
+      { x: 48.5, h: 86,  c: '#d99a8a', d: 0.75 },
+      { x: 53,   h: 132, c: '#c9a24a', d: 1.05 },
+      { x: 57.5, h: 102, c: '#e8c15f', d: 2.55 },
       /* fila de atrás */
       { x: 0.75,  h: 66, c: '#c9a24a', d: 1.6, b: 16, o: .48 },
       { x: 7.25,  h: 54, c: '#f4dda2', d: 0.5, b: 16, o: .42 },
@@ -2135,39 +2152,46 @@ function crearJardin(cont, datos) {
   const final = $('#jardinFinal');
   if (final) {
     crearJardin(final, [
-      { x: 1,  h: 104, c: '#e8c15f', d: 0.3 },
-      { x: 11, h: 132, c: '#f4dda2', d: 1.4 },
-      { x: 22, h: 88,  c: '#d99a8a', d: 2.1 },
-      { x: 34, h: 142, c: '#c9a24a', d: 0.8 },
-      { x: 46, h: 96,  c: '#f4dda2', d: 2.6 },
-      { x: 58, h: 148, c: '#e8c15f', d: 1.1 },
-      { x: 70, h: 92,  c: '#d99a8a', d: 0.5 },
-      { x: 81, h: 126, c: '#f4dda2', d: 1.8 },
-      { x: 92, h: 108, c: '#c9a24a', d: 0.9 },
-      { x: 6,    h: 118, c: '#c9a24a', d: 0.4 },
-      { x: 16.5, h: 96,  c: '#e8c15f', d: 1.9 },
-      { x: 28,   h: 128, c: '#f4dda2', d: 1.2 },
-      { x: 40,   h: 110, c: '#d99a8a', d: 2.4 },
-      { x: 52,   h: 122, c: '#e8c15f', d: 0.2 },
-      { x: 64,   h: 120, c: '#c9a24a', d: 0.7 },
-      { x: 86.5, h: 100, c: '#d99a8a', d: 2.8 },
+      { x: -2,   h: 104, c: '#e8c15f', d: 0.3 },
+      { x: 2.5,  h: 132, c: '#f4dda2', d: 1.4 },
+      { x: 7,    h: 88,  c: '#d99a8a', d: 2.1 },
+      { x: 11.5, h: 142, c: '#c9a24a', d: 0.8 },
+      { x: 16,   h: 96,  c: '#f4dda2', d: 2.6 },
+      { x: 20.5, h: 148, c: '#e8c15f', d: 1.1 },
+      { x: 25,   h: 92,  c: '#d99a8a', d: 0.5 },
+      { x: 29.5, h: 126, c: '#f4dda2', d: 1.8 },
+      { x: 34,   h: 108, c: '#c9a24a', d: 0.9 },
+      { x: 38.5, h: 138, c: '#e8c15f', d: 2.4 },
+      { x: 43,   h: 100, c: '#d99a8a', d: 1.6 },
+      { x: 47.5, h: 144, c: '#f4dda2', d: 0.2 },
+      { x: 52,   h: 90,  c: '#c9a24a', d: 2.8 },
+      { x: 56.5, h: 120, c: '#e8c15f', d: 0.7 },
+      { x: 61,   h: 106, c: '#f4dda2', d: 1.9 },
+      { x: 65.5, h: 150, c: '#d99a8a', d: 1.0 },
+      { x: 70,   h: 94,  c: '#e8c15f', d: 2.5 },
+      { x: 74.5, h: 130, c: '#c9a24a', d: 0.4 },
+      { x: 79,   h: 110, c: '#f4dda2', d: 1.3 },
+      { x: 83.5, h: 140, c: '#e8c15f', d: 2.2 },
+      { x: 88,   h: 86,  c: '#d99a8a', d: 0.6 },
+      { x: 92.5, h: 124, c: '#c9a24a', d: 1.7 },
+      { x: 97,   h: 102, c: '#f4dda2', d: 2.9 },
       /* fila de atrás */
-      { x: 3.5,  h: 64, c: '#c9a24a', d: 0.6, b: 14, o: .50 },
-      { x: 8.5,  h: 52, c: '#f4dda2', d: 1.7, b: 14, o: .42 },
-      { x: 14,   h: 70, c: '#d99a8a', d: 2.6, b: 14, o: .48 },
-      { x: 19.5, h: 58, c: '#e8c15f', d: 0.9, b: 14, o: .44 },
-      { x: 25,   h: 74, c: '#c9a24a', d: 1.3, b: 14, o: .50 },
-      { x: 31,   h: 56, c: '#f4dda2', d: 2.2, b: 14, o: .40 },
-      { x: 37,   h: 68, c: '#d99a8a', d: 0.4, b: 14, o: .46 },
-      { x: 43,   h: 60, c: '#e8c15f', d: 1.9, b: 14, o: .44 },
-      { x: 49,   h: 72, c: '#c9a24a', d: 2.8, b: 14, o: .50 },
-      { x: 55,   h: 54, c: '#f4dda2', d: 0.7, b: 14, o: .40 },
-      { x: 61,   h: 66, c: '#d99a8a', d: 1.1, b: 14, o: .48 },
-      { x: 67,   h: 58, c: '#e8c15f', d: 2.4, b: 14, o: .44 },
-      { x: 74,   h: 70, c: '#c9a24a', d: 0.2, b: 14, o: .50 },
-      { x: 79,   h: 56, c: '#f4dda2', d: 1.6, b: 14, o: .42 },
-      { x: 84,   h: 68, c: '#d99a8a', d: 2.7, b: 14, o: .46 },
-      { x: 90,   h: 62, c: '#e8c15f', d: 0.5, b: 14, o: .48 }
+      { x: 0.5,  h: 66, c: '#c9a24a', d: 0.6, b: 14, o: .50 },
+      { x: 7,    h: 54, c: '#f4dda2', d: 1.7, b: 14, o: .42 },
+      { x: 13.5, h: 72, c: '#d99a8a', d: 2.6, b: 14, o: .48 },
+      { x: 20,   h: 58, c: '#e8c15f', d: 0.9, b: 14, o: .44 },
+      { x: 26.5, h: 74, c: '#c9a24a', d: 1.3, b: 14, o: .50 },
+      { x: 33,   h: 56, c: '#f4dda2', d: 2.2, b: 14, o: .40 },
+      { x: 39.5, h: 68, c: '#d99a8a', d: 0.4, b: 14, o: .46 },
+      { x: 46,   h: 60, c: '#e8c15f', d: 1.9, b: 14, o: .44 },
+      { x: 52.5, h: 72, c: '#c9a24a', d: 2.8, b: 14, o: .50 },
+      { x: 59,   h: 54, c: '#f4dda2', d: 0.7, b: 14, o: .40 },
+      { x: 65.5, h: 66, c: '#d99a8a', d: 1.1, b: 14, o: .48 },
+      { x: 72,   h: 58, c: '#e8c15f', d: 2.4, b: 14, o: .44 },
+      { x: 78.5, h: 70, c: '#c9a24a', d: 0.2, b: 14, o: .50 },
+      { x: 85,   h: 56, c: '#f4dda2', d: 1.6, b: 14, o: .42 },
+      { x: 91.5, h: 68, c: '#d99a8a', d: 2.7, b: 14, o: .46 },
+      { x: 98,   h: 62, c: '#e8c15f', d: 0.5, b: 14, o: .48 }
     ]);
   }
 })();
