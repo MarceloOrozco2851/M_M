@@ -11,7 +11,7 @@ Abre `index.html` con doble clic. Funciona sin servidor; las fotos están en `fo
 1. **Portada:** “UN REGALO PARA TI” → nombre → sobre con sello → “Toca para abrir”.
 2. **Sitio (scroll):**
    - Nombres + “Guatemala · Honduras”.
-   - Foto de su cumpleaños en Metro Mall.
+   - Foto de portada: dos manos formando un corazón en una videollamada.
    - **Tiempo de conocernos (primer saludo):** fecha 27/11/2024 · 22:13, contador y reloj en vivo.
    - **Tiempo de estar juntos (la pregunta):** fecha 14/07/2026, contador, reloj en vivo y total de días juntos.
    - **Tiempo sin verte (la última vez que nos vimos):** fecha 5/9/2026, contador, reloj en vivo y total de días sin verse.
@@ -65,6 +65,7 @@ Están en `fotos/` ya optimizadas (JPEG). Para cambiar una, reemplaza el archivo
 | `metro-mall-2.jpg` | Caminando por Metro Mall |
 | `metro-mall-3.jpg` | Comida en Metro Mall |
 | `graduacion-melida.jpg` | Retrato de graduación de Melida (polaroid flotante) |
+| `portada-corazon.jpg` | Manos formando un corazón en videollamada (foto de portada) |
 
 ### Fotos del viaje
 
