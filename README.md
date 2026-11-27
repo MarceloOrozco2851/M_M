@@ -4,7 +4,7 @@ Página de regalo con la estética de la referencia (azul noche + dorado): porta
 
 ## Cómo verla
 
-Abre `index.html` con doble clic. Funciona sin servidor; las fotos están en `fotos/` y solo las tipografías se descargan de Google Fonts.
+Abre `index.html` con doble clic. Funciona sin servidor; las fotos están en `fotos/`, la canción en `audio/` y solo las tipografías se descargan de Google Fonts.
 
 ## Estructura
 
@@ -25,7 +25,7 @@ Abre `index.html` con doble clic. Funciona sin servidor; las fotos están en `fo
    - **Galería:** las fotos de los días 4 y 5 de septiembre de 2026.
    - “Nuestra lista” (checklist interactiva).
    - “Nuestros vales de amor” (se pueden canjear).
-   - Ruleta de citas.
+   - Ruleta de citas (7 opciones: Cena · Cine · Helado · Foto · Llamada · Videollamada · Sorpresa).
    - **Sobre los atardeceres:** enlace a la página de los siete atardeceres para la graduación.
    - Cierre + firma.
 
@@ -64,6 +64,7 @@ Están en `fotos/` ya optimizadas (JPEG). Para cambiar una, reemplaza el archivo
 | `metro-mall-1.jpg` | Cumpleaños de Melida (velas) |
 | `metro-mall-2.jpg` | Caminando por Metro Mall |
 | `metro-mall-3.jpg` | Comida en Metro Mall |
+| `graduacion-melida.jpg` | Retrato de graduación de Melida (polaroid flotante) |
 
 ### Fotos del viaje
 
@@ -90,9 +91,15 @@ Están en `fotos/viaje/`, optimizadas a 480 px y sin metadatos. Se muestran como
 
 **Nota de privacidad:** el boleto de bus no se publicó porque muestra el número de pasaporte y el código QR. El regreso se cuenta en texto, sin publicar el documento.
 
+## Audio
+
+- **Canción de fondo:** «Toma Mi Mano» de Tercer Cielo, en `audio/toma-mi-mano.mp3` (128 kbps, en loop).
+- Arranca sola al pulsar **“Toca para abrir”** (ese clic permite el autoplay) y se puede pausar o retomar con el botón flotante de la nota musical.
+- La página solo usa la copia optimizada; el archivo original `Tercer Cielo - Toma Mi Mano.mp3` no se referencia (podés quitarlo de la copia que publiques).
+
 ## Publicar y compartir
 
-1. **Netlify Drop** — https://app.netlify.com/drop (arrastra la carpeta completa, con `fotos/`).
+1. **Netlify Drop** — https://app.netlify.com/drop (arrastra la carpeta completa, con `fotos/` y `audio/`).
 2. **GitHub Pages** — Settings → Pages → rama `main` / root.
 3. **Vercel** — `npx vercel` dentro de la carpeta.
 
@@ -107,8 +114,8 @@ La sección **“Nuestros lugares”** usa Leaflet con imágenes satelitales de 
 
 ## Detalles técnicos
 
-- Sin frameworks ni build: un solo `index.html` + `fotos/`.
-- Música suave opcional generada con Web Audio (sin archivos).
+- Sin frameworks ni build: un solo `index.html` + `fotos/` y `audio/`.
+- Música de fondo con `<audio>` («Toma Mi Mano») y botón flotante para pausar/retomar.
 - Contador principal (desde el primer saludo) + línea con los días de relación.
 - Interacciones: modal de carta con foco atrapado, visor de la carta a mano con zoom, checklist, vales canjeables, ruleta con resultado consistente con la aguja.
 - Responsive probado en 360 px, 412 px y escritorio; respeta `prefers-reduced-motion`.
@@ -118,6 +125,6 @@ La sección **“Nuestros lugares”** usa Leaflet con imágenes satelitales de 
 - **Jardín:** 16 tulipanes en la portada y 9 al cierre, más grandes y con cuatro hojas cada uno, meciéndose con el viento. Al tocar uno, se sacude y se le caen las hojas.
 - **Pétalos cayendo:** capa de pétalos dorados, crema y rosa en toda la página.
 - **Lluvia al abrir:** al pulsar “Toca para abrir” salen 32 pétalos desde el sobre.
-- **Fotos flotantes:** cuatro polaroids pequeñas que se balancean alrededor de la página.
+- **Fotos flotantes:** cinco polaroids pequeñas que se balancean alrededor de la página.
 - **Detalles:** tulipán en el divisor de los nombres, en el pie y como icono de la pestaña.
 - Todo se oculta automáticamente si el dispositivo pide movimiento reducido.
