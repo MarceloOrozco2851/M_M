@@ -19,7 +19,7 @@ Abre `index.html` con doble clic. Funciona sin servidor; las fotos están en `fo
    - Foto del primer encuentro (Centro Cívico).
    - “Lo que más amo de ti”.
    - **Línea del tiempo:** 27/11/2024 22:13 → 14/07/2026 → 4/9/2026 12:00 → 5/9/2026 12:30 → 7/9/2026 5:30 → hoy.
-   - **Nuestra distancia:** mapa Guatemala ↔ Honduras con un bus que se mueve por la ruta.
+   - **Nuestra distancia:** mapa Guatemala ↔ Honduras con un bus que se mueve por la ruta y las 14 fotos pequeñas del viaje repartidas alrededor del arco.
    - **Nuestros lugares:** mapa satelital interactivo (Leaflet + Esri) con un pin por lugar; al tocar un pin (o una parada) se abre el álbum de fotos de ese lugar.
    - Foto de Metro Mall.
    - **Galería:** las fotos de los días 4 y 5 de septiembre de 2026.
@@ -64,6 +64,27 @@ Están en `fotos/` ya optimizadas (JPEG). Para cambiar una, reemplaza el archivo
 | `metro-mall-1.jpg` | Cumpleaños de Melida (velas) |
 | `metro-mall-2.jpg` | Caminando por Metro Mall |
 | `metro-mall-3.jpg` | Comida en Metro Mall |
+
+### Fotos del viaje
+
+Están en `fotos/viaje/`, optimizadas a 480 px y sin metadatos. Se muestran como miniaturas tipo polaroid dentro del mapa de **“Nuestra distancia”**, repartidas alrededor de la ruta del bus (son decorativas, no se amplían):
+
+| Archivo | Contenido |
+|---|---|
+| `viaje-sello-guatemala.jpg` | Sello de migración de Guatemala |
+| `viaje-tienda-merida.jpg` | Tienda de bicicletas Mérida |
+| `viaje-policia.jpg` | Policía Nacional Civil desde la ventana |
+| `viaje-aduana-el-amatillo.jpg` | Aduana Terrestre El Amatillo |
+| `viaje-bus-noche.jpg` | Asiento del bus de noche |
+| `viaje-habitacion.jpg` | Habitación del hotel con la maleta |
+| `viaje-bus-pantalla.jpg` | Pantalla y pasillo del bus |
+| `viaje-bus-puerta-noche.jpg` | Puerta del bus abierta de noche |
+| `viaje-bus-pasillo.jpg` | Pasillo con asientos azules |
+| `viaje-bus-marcopolo.jpg` | Bus Marcopolo con las maletas |
+| `viaje-k9.jpg` | Perro K9 en la puerta del bus |
+| `viaje-ventana-lluvia.jpg` | Ventana con gotas de lluvia |
+| `viaje-calle-noche.jpg` | Calle de noche con el termo azul |
+| `viaje-frontera-el-salvador.jpg` | Letrero de El Salvador en la frontera |
 
 **Carta a mano:** viene de `MELIDA.pdf` (1 página escaneada). Se recortó, se convirtió a JPEG y se agregó al modal de “Abrir carta”, debajo del texto. Al tocarla se abre en un visor a pantalla completa y se puede acercar tocando la imagen.
 

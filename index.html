@@ -733,6 +733,42 @@
   }
   .etiqueta--sub{ margin-top:26px; }
 
+  /* Fotos pequeñas del viaje sobre el mapa de la distancia */
+  .foto-ruta{
+    position:absolute;
+    z-index:1;
+    width:clamp(28px, 8%, 44px);
+    margin:0;
+    padding:2px 2px 9px;
+    background:#fdfaf3;
+    border-radius:3px;
+    box-shadow:0 7px 16px rgba(0,0,0,.45);
+    transform:rotate(var(--r, -5deg));
+    animation:flotarRuta var(--d, 9s) ease-in-out var(--delay, 0s) infinite;
+    pointer-events:none;
+    user-select:none;
+    opacity:.92;
+  }
+  .foto-ruta img{
+    display:block;
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:2px;
+    filter:saturate(.82) contrast(1.03);
+  }
+  @keyframes flotarRuta{
+    0%,100% { transform:translateY(0) rotate(var(--r, -5deg)); }
+    50%     { transform:translateY(-4px) rotate(calc(var(--r, -5deg) + 2deg)); }
+  }
+  @media (max-width:420px){
+    .foto-ruta{
+      width:clamp(24px, 8.6%, 30px);
+      padding:2px 2px 7px;
+      opacity:.9;
+    }
+  }
+
   /* Mapa interactivo + paradas */
   .mapa-paradas{
     position:relative;
@@ -1344,6 +1380,7 @@
       transition-duration:.15s !important;
     }
     .flotante, .petalos, .jardin, .burst, .fotos-flotantes{ display:none; }
+    .foto-ruta{ animation:none; }
     .revelar{ opacity:1; transform:none; }
     .ruleta{ transition:none; }
   }
@@ -1525,6 +1562,20 @@
         <span class="ciudad__punto"></span>
         <span class="ciudad__nombre">Honduras</span>
       </div>
+      <figure class="foto-ruta" style="left:3.5%; top:3.5%; --r:-7deg; --d:9s; --delay:0s"><img src="fotos/viaje/viaje-sello-guatemala.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="left:13.5%; top:8%; --r:5deg; --d:10.5s; --delay:-2.5s"><img src="fotos/viaje/viaje-bus-marcopolo.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="left:4%; top:25%; --r:-4deg; --d:11s; --delay:-5s"><img src="fotos/viaje/viaje-policia.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="left:14%; top:31%; --r:7deg; --d:8.5s; --delay:-1.5s"><img src="fotos/viaje/viaje-ventana-lluvia.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="left:3%; top:46%; --r:-6deg; --d:12s; --delay:-6s"><img src="fotos/viaje/viaje-calle-noche.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="right:3.5%; top:3.5%; --r:6deg; --d:9.5s; --delay:-3s"><img src="fotos/viaje/viaje-aduana-el-amatillo.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="right:13.5%; top:8%; --r:-5deg; --d:10s; --delay:-0.8s"><img src="fotos/viaje/viaje-frontera-el-salvador.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="right:4%; top:25%; --r:4deg; --d:11.5s; --delay:-4.2s"><img src="fotos/viaje/viaje-k9.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="right:14%; top:31%; --r:-7deg; --d:9.2s; --delay:-2s"><img src="fotos/viaje/viaje-bus-pasillo.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="right:3%; top:46%; --r:5deg; --d:10.8s; --delay:-7s"><img src="fotos/viaje/viaje-tienda-merida.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="left:32%; top:50%; --r:-3deg; --d:9.8s; --delay:-1s"><img src="fotos/viaje/viaje-bus-noche.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="left:42%; top:56%; --r:6deg; --d:11.2s; --delay:-3.6s"><img src="fotos/viaje/viaje-bus-pantalla.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="left:50.5%; top:48%; --r:-5deg; --d:10.2s; --delay:-5.4s"><img src="fotos/viaje/viaje-bus-puerta-noche.jpg" alt="" loading="lazy" decoding="async"></figure>
+      <figure class="foto-ruta" style="left:60%; top:57%; --r:4deg; --d:9.6s; --delay:-2.2s"><img src="fotos/viaje/viaje-habitacion.jpg" alt="" loading="lazy" decoding="async"></figure>
     </div>
   </section>
 
