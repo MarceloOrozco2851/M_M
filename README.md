@@ -27,7 +27,7 @@ Abre `index.html` con doble clic. Funciona sin servidor; las fotos están en `fo
    - “Nuestros vales de amor” (se pueden canjear).
    - Ruleta de citas (7 opciones: Cena · Cine · Helado · Foto · Llamada · Videollamada · Sorpresa).
    - **Sobre los atardeceres:** enlace a la página de los siete atardeceres para la graduación.
-   - Cierre + firma.
+   - Cierre + firma + dedicatoria final de Eberth (Gaby).
 
 ## Personalizar
 
@@ -122,7 +122,7 @@ La sección **“Nuestros lugares”** usa Leaflet con imágenes satelitales de 
 
 ## Efectos de tulipanes
 
-- **Jardín:** 16 tulipanes en la portada y 9 al cierre, más grandes y con cuatro hojas cada uno, meciéndose con el viento. Al tocar uno, se sacude y se le caen las hojas.
+- **Jardín:** 40 tulipanes en la portada y 32 al cierre, en dos filas (los de atrás más pequeños y tenues), meciéndose con el viento. Al tocar uno, se sacude y se le caen las hojas.
 - **Pétalos cayendo:** capa de pétalos dorados, crema y rosa en toda la página.
 - **Lluvia al abrir:** al pulsar “Toca para abrir” salen 32 pétalos desde el sobre.
 - **Fotos flotantes:** cinco polaroids pequeñas que se balancean alrededor de la página.
